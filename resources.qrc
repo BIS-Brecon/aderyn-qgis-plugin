@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="/plugins/aderyn">
+    <file>icon.png</file>
+    <file>resources/images/adern_large.png</file>
+    <file>icon_settings.png</file>
+    <file>resources/images/aderyn_medium.png</file>
+    <file>resources/images/aderyn_small.png</file>
+  </qresource>
+</RCC>
