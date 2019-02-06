@@ -105,11 +105,12 @@ class AderynQuery:
                    'AND st_DWithin(records.geom_poly,st_GeomFromText(\'' + wkt + '\',27700),' + buffer + ') '
 
         if category == 'BATS':
-            # Bats!
+            #$this->search = $this->search->where('dmt.bat', true);
+            sql = sql + 'AND dmt.bat = TRUE '
         elif category == 'CAT4':
-            sql = sql + 'AND (dmt.cat = \'' + category + ' OR dmt.cat IS NULL) '
+            sql = sql + 'AND (dmt.cat = \'' + category + '\' OR dmt.cat IS NULL) '
         else:
-            sql = sql + 'AND dmt.cat = \'' + category + ' '
+            sql = sql + 'AND dmt.cat = \'' + category + '\' '
 
         sql = sql + 'AND resolution <= 2000 '
         sql = sql + 'ORDER BY actual_name ASC'

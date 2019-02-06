@@ -21,9 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, QVariant
+from PyQt5.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QVariant
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QAction, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QAction, QMessageBox, QFileDialog, QProgressBar
 from PyQt5.QtSql import *  # http://pyqgis.org/blog/2013/04/11/creating-a-postgresql-connection-from-a-qgis-layer-datasource/
 import qgis
 from qgis.core import *
@@ -110,6 +110,7 @@ class Aderyn:
         self.SearchLocation = NULL
         self.SearchName = NULL
         self.SearchOutputFolder = NULL
+        self.SearchCategories = []
         self.Cat1Select = NULL
         self.Cat1Buffer = NULL
         self.Cat2Select = NULL
@@ -274,37 +275,78 @@ class Aderyn:
         #     ))
 
     def validateVariables(self):
-        """Validate that the categories - if a cat is selected then there should be a buffer."""
+        """ Validate that the categories - if a cat is selected then there should be a buffer. """
         if len(self.SearchName) < 2:
             # Search name - bit short!
-            QMessageBox.information(None, "Error!", str('Invalid invalid search name (too short)!'))
+            # QMessageBox.information(None, "Error!", str('Invalid invalid search name!'))
+            self.iface.messageBar().pushMessage("Warning", "Invalid invalid search name!", level=Qgis.Warning)
+            self.run()
         elif len(self.SearchOutputFolder) < 3:
             # Search output folder - bit short!
-            QMessageBox.information(None, "Error!", str('Invalid output folder!'))
+            # QMessageBox.information(None, "Error!", str('Invalid output folder!'))
+            self.iface.messageBar().pushMessage("Warning", "Invalid output folder!", level=Qgis.Warning)
+            self.run()
         elif self.Cat1Select is True and self.Cat1Buffer < 1:
-            QMessageBox.information(None, "Error!", str('No buffer specified for category 1!'))
+            # QMessageBox.information(None, "Error!", str('No buffer specified for category 1!'))
+            self.iface.messageBar().pushMessage("Warning", "No buffer specified for category 1!", level=Qgis.Warning)
+            self.run()
         elif self.Cat2Select is True and self.Cat2Buffer < 1:
-            QMessageBox.information(None, "Error!", str('No buffer specified for category 2!'))
+            # QMessageBox.information(None, "Error!", str('No buffer specified for category 2!'))
+            self.iface.messageBar().pushMessage("Warning", "No buffer specified for category 2!", level=Qgis.Warning)
+            self.run()
         elif self.Cat3Select is True and self.Cat3Buffer < 1:
-            QMessageBox.information(None, "Error!", str('No buffer specified for category 3!'))
+            # QMessageBox.information(None, "Error!", str('No buffer specified for category 3!'))
+            self.iface.messageBar().pushMessage("Warning", "No buffer specified for category 3!", level=Qgis.Warning)
+            self.run()
         elif self.Cat4Select is True and self.Cat4Buffer < 1:
-            QMessageBox.information(None, "Error!", str('No buffer specified for category 4!'))
+            # QMessageBox.information(None, "Error!", str('No buffer specified for category 4!'))
+            self.iface.messageBar().pushMessage("Warning", "No buffer specified for category 4!", level=Qgis.Warning)
+            self.run()
         elif self.BatsSelect is True and self.BatsBuffer < 1:
-            QMessageBox.information(None, "Error!", str('No buffer specified for bats!'))
+            # QMessageBox.information(None, "Error!", str('No buffer specified for bats!'))
+            self.iface.messageBar().pushMessage("Warning", "No buffer specified for bats!", level=Qgis.Warning)
+            self.run()
         else:
             return True
+
+    def validateCategories(self):
+        """ Add the categories to array if they are true and there is s buffer. """
+        if self.Cat1Select is True and self.Cat1Buffer >= 1:
+            cat1 = ['CAT1', self.Cat1Buffer]
+            self.SearchCategories.append(cat1)
+        if self.Cat2Select is True and self.Cat2Buffer >= 1:
+            cat2 = ['CAT2', self.Cat2Buffer]
+            self.SearchCategories.append(cat2)
+        if self.Cat3Select is True and self.Cat3Buffer >= 1:
+            cat3 = ['CAT3', self.Cat3Buffer]
+            self.SearchCategories.append(cat3)
+        if self.Cat4Select is True and self.Cat4Buffer >= 1:
+            cat4 = ['CAT4', self.Cat4Buffer]
+            self.SearchCategories.append(cat4)
+        if self.BatsSelect is True and self.BatsBuffer >= 1:
+            bats = ['BATS', self.BatsBuffer]
+            self.SearchCategories.append(bats)
+
+        if len(self.SearchCategories) > 0:
+            return True
+        else:
+            self.iface.messageBar().pushMessage("Warning", "No categories selected", level=Qgis.Warning)
+            self.run()
 
     def validateLocation(self):
         """Validate that the search location is a valid grid ref."""
         if len(self.SearchLocation) % 2 != 0:
             # Fine - number is even.
-            QMessageBox.information(None, "Error!", str('Invalid grid reference (not even)!'))
+            # QMessageBox.information(None, "Error!", str('Invalid grid reference (not even)!'))
+            self.iface.messageBar().pushMessage("Warning", "Invalid grid reference (not even)!", level=Qgis.Warning)
         elif len(self.SearchLocation) < 4:
             # Min is 2 digits plus prefix.
-            QMessageBox.information(None, "Error!", str('Invalid grid reference (too short)!'))
+            # QMessageBox.information(None, "Error!", str('Invalid grid reference (too short)!'))
+            self.iface.messageBar().pushMessage("Warning", "Invalid grid reference (too short)!", level=Qgis.Warning)
         elif len(self.SearchLocation) > 12:
             # Max is 10 nubmers plus prefix.
-            QMessageBox.information(None, "Error!", str('Invalid grid reference (too long)!'))
+            # QMessageBox.information(None, "Error!", str('Invalid grid reference (too long)!'))
+            self.iface.messageBar().pushMessage("Warning", "Invalid grid reference (too long)!", level=Qgis.Warning)
         else:
             return True
 
@@ -365,7 +407,8 @@ class Aderyn:
             if rb in iface.mapCanvas().scene().items():
                 iface.mapCanvas().scene().removeItem(rb)
 
-        # Only do this for canvas in OSGB or if there's a user-defined grid size
+        # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
+        self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
         if self.canvasCrs == self.osgbCrs:
 
             r = QgsRubberBand(self.canvas, False)  # False = a polyline
@@ -388,9 +431,8 @@ class Aderyn:
             self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
 
         else:
-            # self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
-            QMessageBox.information(None, "Error!", str(
-                "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
+            self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
+            # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
 
     def loadSetings(self):
         """Get the current db settings and load them into the form fields."""
@@ -411,6 +453,9 @@ class Aderyn:
         s.setValue("aderyn/dbpassword", self.dbpassword)
         s.setValue("aderyn/dbport", 5432)
         QMessageBox.information(None, "Success!", str('Settings saved!'))
+
+        #Now load the setting to refresh the setting being used by the plugin.
+        self.loadSetings()
 
     def testDatabaseConnection(self):
         """Test the database connection to LERC Wales merged database."""
@@ -486,26 +531,31 @@ class Aderyn:
                 query = db.exec_(queryString)
                 QgsMessageLog.logMessage(category + ' query returned ' + str(query.size()) + ' rows.', 'Aderyn')
 
-                # Create the shapefile and get the name of the file.
-                shapeFile = self.createShapefile(category, query)
+                # Did we get any data?
+                if query.size() > 0:
 
-                # Get the file name - for adding it to the interface.
-                fileName = shapeFile + '.shp';
-                newFile = os.path.join(self.SearchOutputFolder, fileName)
+                    # Create the shapefile and get the name of the file.
+                    shapeFile = self.createShapefile(category, query)
 
-                # Add the shapefile to QGIS'
-                layer = iface.addVectorLayer(newFile, category + ' - ' + self.SearchName, "ogr")
-                if not layer:
-                    # self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFile + ')!', level=Qgis.Warning)
-                    QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFile + ')!'))
+                    # Get the file name - for adding it to the interface.
+                    fileName = shapeFile + '.shp';
+                    newFile = os.path.join(self.SearchOutputFolder, fileName)
+
+                    # Add the shapefile to QGIS'
+                    layer = iface.addVectorLayer(newFile, category + ' - ' + self.SearchName, "ogr")
+                    if not layer:
+                        self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFile + ')!', level=Qgis.Warning)
+                        # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFile + ')!'))
+                    else:
+                        # Style the layer.
+                        self.styleShapefile(layer, category)
+
+                        # If selected, convert the layer to a CSV.
+                        if self.CsvSelect:
+                            self.createCsv(layer, category)
+
                 else:
-                    # Style the layer.
-                    self.styleShapefile(layer, category)
-                    # QgsMessageLog.logMessage('Layer source: ' + layer.source() + '.', 'Aderyn')
-
-                    # If selected, convert the layer to a CSV.
-                    if self.CsvSelect:
-                        self.createCsv(layer, category)
+                    self.iface.messageBar().pushMessage("Warning", category + ' did not return any records! (' + str(query.size()) + ')', level=Qgis.Warning)
 
                 # Close the connection.
                 db.removeDatabase('QPSQL')
@@ -634,6 +684,9 @@ class Aderyn:
         elif category == 'CAT4':
             symbol = QgsMarkerSymbol.createSimple({'name': 'star', 'color': 'black', 'size': '2', })
             renderer.setSymbol(symbol)
+        elif category == 'BATS':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'triangle', 'color': 'black', 'size': '2', })
+            renderer.setSymbol(symbol)
 
         # Update the symbolgy on the layer tree (refresh)
         iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
@@ -662,25 +715,45 @@ class Aderyn:
         # See if OK was pressed
         if result:
             # Let's go!
-            # Look at using progress bar here - https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/communicating.html - showing progress??
             self.setVariables()
-            validationVariables = self.validateVariables()
             validationLocation = self.validateLocation()
-            if validationVariables == True and validationLocation == True:
+            self.locateGridref()
+            validationVariables = self.validateVariables()
+            validateCategories = self.validateCategories()
+            if validationVariables == True and validationLocation == True and validateCategories == True:
+
+                #Set up progress bar. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/communicating.html - showing progress??
+                progressMessageBar = iface.messageBar().createMessage("Running search...")
+                progress = QProgressBar()
+                progress.setMaximum(len(self.SearchCategories))
+                progress.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+                progressMessageBar.layout().addWidget(progress)
+                iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)
+                couter = 0
+
                 self.locateGridref()  # This will validate the location (again) and display it on the map.
                 # Run each search in turn.
-                if self.Cat3Select == True:
-                    self.runSearch("CAT3", str(self.Cat1Buffer))
-                if self.Cat2Select == True:
-                    self.runSearch("CAT2", str(self.Cat2Buffer))
-                if self.Cat1Select == True:
-                    self.runSearch("CAT1", str(self.Cat3Buffer))
-                if self.Cat4Select == True:
-                    self.runSearch("CAT4", str(self.Cat4Buffer))
-                if self.BatsSelect == True:
-                    self.runSearch("bats", str(self.BatsBuffer))
-                # if self.CsvSelect = True:
-                #    self.gererateCsv()
+                for category in self.SearchCategories:
+
+                    QgsMessageLog.logMessage('Looping - search ' + category[0] + ', buffer ' + str(category[1]), 'Aderyn')
+                    self.runSearch(category[0], str(category[1]))
+
+                    couter += 1 # Increment.
+                    progress.setValue(couter)
+
+                # if self.Cat3Select == True:
+                #     self.runSearch("CAT3", str(self.Cat1Buffer))
+                # if self.Cat2Select == True:
+                #     self.runSearch("CAT2", str(self.Cat2Buffer))
+                # if self.Cat1Select == True:
+                #     self.runSearch("CAT1", str(self.Cat3Buffer))
+                # if self.Cat4Select == True:
+                #     self.runSearch("CAT4", str(self.Cat4Buffer))
+                # if self.BatsSelect == True:
+                #     self.runSearch("BATS", str(self.BatsBuffer))
+
+                iface.messageBar().clearWidgets()
+
             # pass
 
     def runSettings(self):

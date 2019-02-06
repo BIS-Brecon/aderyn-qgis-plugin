@@ -100,6 +100,9 @@ These settings are stored in clear text.</string>
      <height>20</height>
     </rect>
    </property>
+   <property name="echoMode">
+    <enum>QLineEdit::Password</enum>
+   </property>
   </widget>
   <widget class="QLabel" name="label_dbhost">
    <property name="geometry">
