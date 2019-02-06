@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9af94698-e8ab-48b4-bdd7-148fa1eb374c" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/aderyn.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/aderyn_query.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn_query.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings_dialog.ui" beforeDir="false" afterPath="$PROJECT_DIR$/settings_dialog.ui" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -33,8 +30,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/aderyn_query.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="867">
-              <caret line="108" column="44" selection-start-line="108" selection-start-column="44" selection-end-line="108" selection-end-column="44" />
+            <state relative-caret-position="627">
+              <caret line="103" column="59" selection-start-line="103" selection-start-column="59" selection-end-line="103" selection-end-column="59" />
             </state>
           </provider>
         </entry>
@@ -42,27 +39,23 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/aderyn.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="451">
-              <caret line="415" column="65" lean-forward="true" selection-start-line="415" selection-start-column="65" selection-end-line="415" selection-end-column="65" />
+            <state relative-caret-position="578">
+              <caret line="582" column="71" selection-start-line="582" selection-start-column="71" selection-end-line="582" selection-end-column="71" />
               <folding>
-                <element signature="e#1262#1347#0" expanded="true" />
-                <element signature="e#7866#8945#0" />
-                <element signature="e#8983#10810#0" />
-                <element signature="e#10902#13130#0" />
-                <element signature="e#13162#14004#0" />
-                <element signature="e#13857#14857#0" />
-                <element signature="e#16936#17184#0" />
-                <element signature="e#19790#20549#0" />
-                <element signature="e#17914#19783#0" />
-                <element signature="e#19821#20038#0" />
-                <element signature="e#20089#20187#0" />
-                <element signature="e#20240#23583#0" />
-                <element signature="e#23641#28175#0" />
-                <element signature="e#26057#28057#0" />
-                <element signature="e#28227#28884#0" />
-                <element signature="e#28941#30115#0" />
-                <element signature="e#30134#30453#0" />
-                <element signature="e#31935#33542#0" />
+                <element signature="e#2030#5066#0" />
+                <element signature="e#5142#5571#0" />
+                <element signature="e#7919#8998#0" />
+                <element signature="e#9036#10863#0" />
+                <element signature="e#10906#13136#0" />
+                <element signature="e#14272#15272#0" />
+                <element signature="e#19504#19752#0" />
+                <element signature="e#19790#20541#0" />
+                <element signature="e#20589#22458#0" />
+                <element signature="e#22496#22713#0" />
+                <element signature="e#22764#22862#0" />
+                <element signature="e#31126#31783#0" />
+                <element signature="e#31840#33178#0" />
+                <element signature="e#33210#33529#0" />
               </folding>
             </state>
           </provider>
@@ -89,6 +82,7 @@
       <find>geom</find>
       <find>invalid</find>
       <find>validation faile</find>
+      <find>sensitive</find>
     </findStrings>
     <dirStrings>
       <dir>C:\QGIS Plugins\aderyn</dir>
@@ -197,13 +191,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>503</line>
-          <option name="timeStamp" value="15" />
+          <line>790</line>
+          <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>738</line>
-          <option name="timeStamp" value="17" />
+          <line>445</line>
+          <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -293,34 +287,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn_query.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="867">
-          <caret line="108" column="44" selection-start-line="108" selection-start-column="44" selection-end-line="108" selection-end-column="44" />
+        <state relative-caret-position="627">
+          <caret line="103" column="59" selection-start-line="103" selection-start-column="59" selection-end-line="103" selection-end-column="59" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="451">
-          <caret line="415" column="65" lean-forward="true" selection-start-line="415" selection-start-column="65" selection-end-line="415" selection-end-column="65" />
+        <state relative-caret-position="578">
+          <caret line="582" column="71" selection-start-line="582" selection-start-column="71" selection-end-line="582" selection-end-column="71" />
           <folding>
-            <element signature="e#1262#1347#0" expanded="true" />
-            <element signature="e#7866#8945#0" />
-            <element signature="e#8983#10810#0" />
-            <element signature="e#10902#13130#0" />
-            <element signature="e#13162#14004#0" />
-            <element signature="e#13857#14857#0" />
-            <element signature="e#16936#17184#0" />
-            <element signature="e#19790#20549#0" />
-            <element signature="e#17914#19783#0" />
-            <element signature="e#19821#20038#0" />
-            <element signature="e#20089#20187#0" />
-            <element signature="e#20240#23583#0" />
-            <element signature="e#23641#28175#0" />
-            <element signature="e#26057#28057#0" />
-            <element signature="e#28227#28884#0" />
-            <element signature="e#28941#30115#0" />
-            <element signature="e#30134#30453#0" />
-            <element signature="e#31935#33542#0" />
+            <element signature="e#2030#5066#0" />
+            <element signature="e#5142#5571#0" />
+            <element signature="e#7919#8998#0" />
+            <element signature="e#9036#10863#0" />
+            <element signature="e#10906#13136#0" />
+            <element signature="e#14272#15272#0" />
+            <element signature="e#19504#19752#0" />
+            <element signature="e#19790#20541#0" />
+            <element signature="e#20589#22458#0" />
+            <element signature="e#22496#22713#0" />
+            <element signature="e#22764#22862#0" />
+            <element signature="e#31126#31783#0" />
+            <element signature="e#31840#33178#0" />
+            <element signature="e#33210#33529#0" />
           </folding>
         </state>
       </provider>

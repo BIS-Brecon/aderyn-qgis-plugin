@@ -101,6 +101,7 @@ class AderynQuery:
                    'LEFT JOIN lrc_wales_data.dmt ON dmt.rtvk = taxon_dict.rtvk ' \
                    '' \
                    'WHERE date_type != \'U\' ' \
+                   'AND lrc_wales_data.records.resolution <= 2000 ' \
                    'AND lrc_wales_data.taxon_dict.id IS NOT NULL ' \
                    'AND st_DWithin(records.geom_poly,st_GeomFromText(\'' + wkt + '\',27700),' + buffer + ') '
 

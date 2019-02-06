@@ -106,6 +106,7 @@ class Aderyn:
         self.gridSquareCentre = NULL  # QgsPointXY
         self.gridSquareRectangle = NULL  # QgsRectangle
         self.gridSquareRubberBand = NULL  # QgsRubberBand
+        self.gridSquareRubberBandMaxBuffer = 0  # QgsRubberBand - store the largest buffer.
 
         self.SearchLocation = NULL
         self.SearchName = NULL
@@ -311,20 +312,21 @@ class Aderyn:
 
     def validateCategories(self):
         """ Add the categories to array if they are true and there is s buffer. """
-        if self.Cat1Select is True and self.Cat1Buffer >= 1:
-            cat1 = ['CAT1', self.Cat1Buffer]
-            self.SearchCategories.append(cat1)
-        if self.Cat2Select is True and self.Cat2Buffer >= 1:
-            cat2 = ['CAT2', self.Cat2Buffer]
-            self.SearchCategories.append(cat2)
+        self.SearchCategories = []
         if self.Cat3Select is True and self.Cat3Buffer >= 1:
-            cat3 = ['CAT3', self.Cat3Buffer]
+            cat3 = ['CAT3', self.Cat3Buffer, 'yellow']
             self.SearchCategories.append(cat3)
+        if self.Cat2Select is True and self.Cat2Buffer >= 1:
+            cat2 = ['CAT2', self.Cat2Buffer, 'orange']
+            self.SearchCategories.append(cat2)
+        if self.Cat1Select is True and self.Cat1Buffer >= 1:
+            cat1 = ['CAT1', self.Cat1Buffer, 'red']
+            self.SearchCategories.append(cat1)
         if self.Cat4Select is True and self.Cat4Buffer >= 1:
-            cat4 = ['CAT4', self.Cat4Buffer]
+            cat4 = ['CAT4', self.Cat4Buffer, 'black']
             self.SearchCategories.append(cat4)
         if self.BatsSelect is True and self.BatsBuffer >= 1:
-            bats = ['BATS', self.BatsBuffer]
+            bats = ['BATS', self.BatsBuffer, 'grey']
             self.SearchCategories.append(bats)
 
         if len(self.SearchCategories) > 0:
@@ -386,19 +388,22 @@ class Aderyn:
                 self.gridSquareRectangle = rect
 
                 # Display the gridref.
-                self.displayGridref(rect)
+                self.displayGridref()
 
         else:
             self.iface.messageBar().pushMessage("Warning", "Grid Ref. Validation failed!", level=Qgis.Warning)
             # QMessageBox.information(None, "Error!", str("Grid Ref. Validation failed!"))
 
-    def displayGridref(self, rect):
+    def displayGridref(self):
 
         # Create the gridref.
         # gr = self.osgr.grFromEN(point.x(), point.y(), precision) #This just returns the gr string - i.e. SO2242
         # self.iface.messageBar().pushMessage("Warning", gr, level=Qgis.Warning)
+        rect = self.gridSquareRectangle
+        geometry = QgsGeometry()
+        geometry = geometry.fromRect(rect)
 
-        # Remove any existing QgsRubberBands - Get RubberBands
+        # Get existing RubberBands
         rbs = [i for i in iface.mapCanvas().scene().items()
                if issubclass(type(i), qgis._gui.QgsRubberBand)]
 
@@ -413,22 +418,62 @@ class Aderyn:
 
             r = QgsRubberBand(self.canvas, False)  # False = a polyline
             color = QColor(255, 0, 255)
-            points = [QgsPoint(rect.xMinimum(), rect.yMinimum()),
-                      QgsPoint(rect.xMinimum(), rect.yMaximum()),
-                      QgsPoint(rect.xMaximum(), rect.yMaximum()),
-                      QgsPoint(rect.xMaximum(), rect.yMinimum()),
-                      QgsPoint(rect.xMinimum(), rect.yMinimum())]
-            r.setToGeometry(QgsGeometry.fromPolyline(points), None)
+            transparent = QColor(0, 0, 0, 0)
+            # points = [QgsPoint(rect.xMinimum(), rect.yMinimum()),
+            #           QgsPoint(rect.xMinimum(), rect.yMaximum()),
+            #           QgsPoint(rect.xMaximum(), rect.yMaximum()),
+            #           QgsPoint(rect.xMaximum(), rect.yMinimum()),
+            #           QgsPoint(rect.xMinimum(), rect.yMinimum())]
+            # r.setToGeometry(QgsGeometry.fromPolyline(points), None)
+            r.setToGeometry(geometry, None)
             r.setColor(color)
+            r.setFillColor(transparent)
             r.setWidth(2)
 
             # Store the Qgs RubberBand.
             self.gridSquareRubberBand = r
 
+            #Pan and zoom to the gridref.
             # box = rect.boundingBoxOfSelected()
             self.canvas.setExtent(rect)
             self.canvas.refresh()
             self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
+
+        else:
+            self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
+            # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
+
+    def displayBuffer(self, buffer, colour):
+
+        #Convert buffer to int.
+        buffer = int(buffer)
+
+        # Buffer the rectangle. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+        rect = self.gridSquareRectangle
+        geometry = QgsGeometry()
+        geometry = geometry.fromRect(rect)
+        buffered = geometry.buffer(buffer, 10)
+
+        # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
+        self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
+        if self.canvasCrs == self.osgbCrs:
+
+            r = QgsRubberBand(self.canvas, False)  # False = a polyline
+            color = QColor(colour)
+            transparent = QColor(0, 0, 0, 0)
+            r.setToGeometry(buffered, None)
+            r.setColor(color)
+            r.setFillColor(transparent)
+            r.setWidth(2)
+
+            # Store the buffer - if it's larger than the existing buffer.
+            if buffer > self.gridSquareRubberBandMaxBuffer:
+                self.gridSquareRubberBandMaxBuffer = buffer
+                boundingbox = buffered.boundingBox()
+                self.canvas.setExtent(boundingbox)
+                # self.canvas.setExtent(buffered)
+                self.canvas.refresh()
+                self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
 
         else:
             self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
@@ -535,7 +580,7 @@ class Aderyn:
                 if query.size() > 0:
 
                     # Create the shapefile and get the name of the file.
-                    shapeFile = self.createShapefile(category, query)
+                    shapeFile = self.createShapefile(category, buffer, query)
 
                     # Get the file name - for adding it to the interface.
                     fileName = shapeFile + '.shp';
@@ -564,12 +609,12 @@ class Aderyn:
         else:
             QMessageBox.information(None, "Error!", str('Invalid database specification!'))
 
-    def createShapefile(self, category, query):
+    def createShapefile(self, category, buffer, query):
         """ Take query object and create shapefile. """
         # Create a writer.
         writerCrs = QgsCoordinateReferenceSystem(27700)
         shapefileType = QgsWkbTypes.Point  # Point - could be polygon.
-        fileName = category.lower() + '_' + self.SearchName.replace(" ", "_").lower()
+        fileName = category.lower() + '_' + self.SearchName.replace(" ", "_").lower() + '_' + buffer
         outputFile = os.path.join(self.SearchOutputFolder, fileName)
         QgsMessageLog.logMessage('Output file: ' + outputFile + '.', 'Aderyn')
         fields = QgsFields()
@@ -732,6 +777,13 @@ class Aderyn:
                 couter = 0
 
                 self.locateGridref()  # This will validate the location (again) and display it on the map.
+
+                #Add all the buffers.
+                for category in self.SearchCategories:
+
+                    QgsMessageLog.logMessage('Looping - display buffer ' + category[0] + ', buffer ' + str(category[1]) + ', colour ' + category[2], 'Aderyn')
+                    self.displayBuffer(str(category[1]), category[2])
+
                 # Run each search in turn.
                 for category in self.SearchCategories:
 
