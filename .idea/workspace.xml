@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="9af94698-e8ab-48b4-bdd7-148fa1eb374c" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aderyn.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aderyn_query.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn_query.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,21 +38,28 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/aderyn.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="677" column="59" lean-forward="true" selection-start-line="677" selection-start-column="59" selection-end-line="677" selection-end-column="59" />
+            <state relative-caret-position="241">
+              <caret line="753" column="31" lean-forward="true" selection-start-line="753" selection-start-column="31" selection-end-line="753" selection-end-column="31" />
               <folding>
+                <element signature="e#1262#1351#0" expanded="true" />
+                <element signature="e#2030#5158#0" />
+                <element signature="e#5234#5663#0" />
+                <element signature="e#5952#7402#1" />
+                <element signature="e#8011#9090#0" />
+                <element signature="e#9128#10955#0" />
+                <element signature="e#10998#13228#0" />
+                <element signature="e#13272#14401#0" />
                 <element signature="e#14443#15443#0" />
                 <element signature="e#15482#17553#0" />
                 <element signature="e#17594#19899#0" />
-                <element signature="e#19955#21646#0" />
                 <element signature="e#21683#21931#0" />
                 <element signature="e#21969#22720#0" />
                 <element signature="e#22768#24637#0" />
                 <element signature="e#25094#28669#0" />
+                <element signature="e#28735#33284#0" />
                 <element signature="e#33336#33993#0" />
                 <element signature="e#34050#35388#0" />
                 <element signature="e#35420#35739#0" />
-                <element signature="e#35768#38385#0" />
                 <element signature="e#38422#40029#0" />
               </folding>
             </state>
@@ -295,21 +300,28 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="677" column="59" lean-forward="true" selection-start-line="677" selection-start-column="59" selection-end-line="677" selection-end-column="59" />
+        <state relative-caret-position="241">
+          <caret line="753" column="31" lean-forward="true" selection-start-line="753" selection-start-column="31" selection-end-line="753" selection-end-column="31" />
           <folding>
+            <element signature="e#1262#1351#0" expanded="true" />
+            <element signature="e#2030#5158#0" />
+            <element signature="e#5234#5663#0" />
+            <element signature="e#5952#7402#1" />
+            <element signature="e#8011#9090#0" />
+            <element signature="e#9128#10955#0" />
+            <element signature="e#10998#13228#0" />
+            <element signature="e#13272#14401#0" />
             <element signature="e#14443#15443#0" />
             <element signature="e#15482#17553#0" />
             <element signature="e#17594#19899#0" />
-            <element signature="e#19955#21646#0" />
             <element signature="e#21683#21931#0" />
             <element signature="e#21969#22720#0" />
             <element signature="e#22768#24637#0" />
             <element signature="e#25094#28669#0" />
+            <element signature="e#28735#33284#0" />
             <element signature="e#33336#33993#0" />
             <element signature="e#34050#35388#0" />
             <element signature="e#35420#35739#0" />
-            <element signature="e#35768#38385#0" />
             <element signature="e#38422#40029#0" />
           </folding>
         </state>
