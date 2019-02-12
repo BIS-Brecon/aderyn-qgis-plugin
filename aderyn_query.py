@@ -10,7 +10,7 @@ class AderynQuery:
         self.sql = sqlTest
         return self.sql
 
-    def sqlQuery(self, category, wkt, buffer):
+    def sqlQuery(self, category, wkt, wkt_centre, buffer):
         """Main sql query """
         sql = 'SELECT lrc_wales_data.records.id, ' \
                    'lrc_wales_data.records.lrcs_id, ' \
@@ -25,17 +25,15 @@ class AderynQuery:
                    'lrc_wales_data.records.date_entered, ' \
                    'lrc_wales_data.records.date_modified, ' \
                    'lrc_wales_data.records.grid_ref, ' \
-                   'CASE WHEN lrc_wales_data.dmt.sensitive_resolution > 0' \
-                   '    THEN ' \
-                   '        /* Is the cofnod release res set HIGHER than the default release res. */' \
-                   '        CASE WHEN lrc_wales_data.records.grid_ref_release_res > lrc_wales_data.dmt.sensitive_resolution' \
-                   '        THEN ' \
-                   '            /* Use the cofnod res. */' \
-                   '            lrc_wales_data.reduce_grid_reference(lrc_wales_data.records.grid_ref, lrc_wales_data.records.grid_ref_release_res, FALSE)' \
-                   '        ELSE ' \
-                   '            /* Use the default DMT res. */' \
-                   '            lrc_wales_data.reduce_grid_reference(lrc_wales_data.records.grid_ref, lrc_wales_data.dmt.sensitive_resolution, FALSE)' \
-                   '        END ' \
+                   'CASE WHEN lrc_wales_data.dmt.sensitive_resolution > 0 THEN ' \
+                   '        /* Is the cofnod release res set HIGHER than the default release res. */ ' \
+                   '        CASE WHEN lrc_wales_data.records.grid_ref_release_res > lrc_wales_data.dmt.sensitive_resolution THEN ' \
+                   '                /* Use the cofnod res. */ ' \
+                   '                lrc_wales_data.reduce_grid_reference(lrc_wales_data.records.grid_ref, lrc_wales_data.records.grid_ref_release_res, FALSE) ' \
+                   '            ELSE ' \
+                   '                /* Use the default DMT res. */ ' \
+                   '                lrc_wales_data.reduce_grid_reference(lrc_wales_data.records.grid_ref, lrc_wales_data.dmt.sensitive_resolution, FALSE) ' \
+                   '            END ' \
                    '    ELSE ' \
                    '        /* Just return the normal grid ref as the public grid ref. */' \
                    '        lrc_wales_data.records.grid_ref' \
@@ -83,12 +81,36 @@ class AderynQuery:
                    'lrc_wales_data.dmt.full_status, ' \
                    'lrc_wales_data.dmt.sensitive_resolution, ' \
                    'lrc_wales_data.dmt.sensitive_features, ' \
+                   '    CASE WHEN lrc_wales_data.dmt.sensitive_resolution > 0' \
+                   '    THEN ' \
+                   '        /* Is the cofnod release res set HIGHER than the default release res. */' \
+                   '        CASE WHEN lrc_wales_data.records.grid_ref_release_res > lrc_wales_data.dmt.sensitive_resolution THEN ' \
+                   '            /* Is the res higher than the cofnod res?. */' \
+                   '            CASE WHEN lrc_wales_data.dmt.sensitive_resolution >= lrc_wales_data.records.grid_ref_release_res THEN ' \
+                   '                \'t\' ' \
+                   '            ELSE ' \
+                   '                \'f\' ' \
+                   '            END ' \
+                   '        ELSE ' \
+                   '            /* Is the res higher that the  DMT res. */' \
+                   '            CASE WHEN lrc_wales_data.dmt.sensitive_resolution >= lrc_wales_data.dmt.sensitive_resolution THEN ' \
+                   '                \'t\' ' \
+                   '            ELSE ' \
+                   '                \'f\' ' \
+                   '            END ' \
+                   '        END ' \
+                   '    ELSE ' \
+                   '        /* Return false. */' \
+                   '        \'f\' ' \
+                   '    END ' \
+                   'AS sensitive, ' \
                    'lrc_wales_data.dmt.cat3_json, ' \
                    '' \
                    'lrc_wales_data.taxon_nbn_groups.id AS id_taxon_nbn_group, ' \
                    'lrc_wales_data.taxon_nbn_groups.name AS name_taxon_nbn_group, ' \
                    'lrc_wales_data.taxon_super_groups.id AS id_taxon_super_group, ' \
                    'lrc_wales_data.taxon_super_groups.name AS name_taxon_super_group, ' \
+                   'round(st_Distance(lrc_wales_data.records.geom_point, st_GeomFromText(\'' +  wkt_centre + '\',27700))) AS distance, ' \
                    'ST_AsGeoJSON(geom_point) AS geom_point, ' \
                    'ST_AsGeoJSON(geom_poly) AS geom_poly ' \
                    '' \
@@ -113,8 +135,7 @@ class AderynQuery:
         else:
             sql = sql + 'AND dmt.cat = \'' + category + '\' '
 
-        sql = sql + 'AND resolution <= 2000 '
-        sql = sql + 'ORDER BY actual_name ASC'
+        sql = sql + 'ORDER BY actual_name ASC '
 
         self.sql = sql
         return self.sql

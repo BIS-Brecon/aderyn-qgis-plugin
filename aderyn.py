@@ -561,6 +561,10 @@ class Aderyn:
                 QgsMessageLog.logMessage('Database opened successfully.', 'Aderyn')
                 QgsMessageLog.logMessage('Searching ' + category + ', buffer ' + buffer, 'Aderyn')
 
+                # Build the centre WKT. self.gridSquareCentre = centre ~ centre = QgsPointXY(res[0], res[1])
+                wkt_centre = 'POINT(' \
+                             + str(self.gridSquareCentre.x()) + ' ' + str(self.gridSquareCentre.y()) + ')'
+
                 # Build the WKT.
                 wkt = 'POLYGON((' \
                       + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
@@ -569,9 +573,10 @@ class Aderyn:
                       + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
                       + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + '))'
                 QgsMessageLog.logMessage('WKT: ' + wkt + '.', 'Aderyn')
+                QgsMessageLog.logMessage('WKT Centre: ' + wkt_centre + '.', 'Aderyn')
                 # Build the query string.
                 AderynQueryObj = aderyn_query.AderynQuery()
-                queryString = AderynQueryObj.sqlQuery(category, wkt, buffer)
+                queryString = AderynQueryObj.sqlQuery(category, wkt, wkt_centre, buffer)
                 # QgsMessageLog.logMessage('SQL: ' + queryString + '', 'Aderyn')
                 query = db.exec_(queryString)
                 QgsMessageLog.logMessage(category + ' query returned ' + str(query.size()) + ' rows.', 'Aderyn')
@@ -619,30 +624,23 @@ class Aderyn:
         QgsMessageLog.logMessage('Output file: ' + outputFile + '.', 'Aderyn')
         fields = QgsFields()
         fields.append(QgsField("id", QVariant.Int))
-        fields.append(QgsField("lrc", QVariant.String))
-        fields.append(QgsField("tok", QVariant.String))
-        fields.append(QgsField("rtvk", QVariant.String))
-        fields.append(QgsField("cat", QVariant.String))
+        fields.append(QgsField("sensitive", QVariant.String))
+        fields.append(QgsField("grid_ref", QVariant.String))
+        fields.append(QgsField("distance", QVariant.Int))
         fields.append(QgsField("actual_name", QVariant.String))
         fields.append(QgsField("common_name", QVariant.String))
-        fields.append(QgsField("welsh_name", QVariant.String))
-        fields.append(QgsField("taxon_family", QVariant.String))
-        fields.append(QgsField("taxon_order", QVariant.String))
+        fields.append(QgsField("date_formatted", QVariant.String))
+        fields.append(QgsField("recorder", QVariant.String))
+        fields.append(QgsField("abundance", QVariant.String))
+        fields.append(QgsField("location", QVariant.String))
+        fields.append(QgsField("comments", QVariant.String))
+        fields.append(QgsField("full_status", QVariant.String))
+        fields.append(QgsField("source", QVariant.String))
+        fields.append(QgsField("determiner", QVariant.String))
+        fields.append(QgsField("verification_level", QVariant.String))
+        fields.append(QgsField("grid_ref_public", QVariant.String))
         fields.append(QgsField("taxon_group", QVariant.String))  # name_taxon_nbn_group
         fields.append(QgsField("super_group", QVariant.String))  # name_taxon_super_group
-        fields.append(QgsField("full_status", QVariant.String))
-        fields.append(QgsField("date_formatted", QVariant.String))
-        fields.append(QgsField("grid_ref", QVariant.String))
-        fields.append(QgsField("grid_ref_public", QVariant.String))
-        fields.append(QgsField("resolution", QVariant.String))
-        fields.append(QgsField("location", QVariant.String))
-        fields.append(QgsField("abundance", QVariant.String))
-        fields.append(QgsField("recorder", QVariant.String))
-        fields.append(QgsField("determiner", QVariant.String))
-        fields.append(QgsField("record_type", QVariant.String))
-        fields.append(QgsField("source", QVariant.String))
-        fields.append(QgsField("comments", QVariant.String))
-        fields.append(QgsField("verification_level", QVariant.String))
         writer = QgsVectorFileWriter(outputFile, "CP1250", fields, shapefileType, writerCrs, "ESRI Shapefile")
 
         # Errors?
@@ -664,30 +662,23 @@ class Aderyn:
             # Add in one line.
             fet.setAttributes([
                 record.field('id').value(),
-                record.field('lrc').value(),
-                record.field('tok').value(),
-                record.field('rtvk').value(),
-                record.field('cat').value(),
+                record.field('sensitive').value(),
+                record.field('grid_ref').value(),
+                record.field('distance').value(),
                 record.field('actual_name').value(),
                 record.field('common_name').value(),
-                record.field('welsh_name').value(),
-                record.field('taxon_family').value(),
-                record.field('taxon_order').value(),
+                record.field('date_formatted').value(),
+                record.field('recorder').value(),
+                record.field('abundance').value(),
+                record.field('location').value(),
+                record.field('comments').value(),
+                record.field('full_status').value(),
+                record.field('source').value(),
+                record.field('determiner').value(),
+                record.field('verification_level').value(),
+                record.field('grid_ref_public').value(),
                 record.field('name_taxon_nbn_group').value(),  # name_taxon_nbn_group
                 record.field('name_taxon_super_group').value(),  # name_taxon_super_group
-                record.field('full_status').value(),
-                record.field('date_formatted').value(),
-                record.field('grid_ref').value(),
-                record.field('grid_ref_public').value(),
-                record.field('resolution').value(),
-                record.field('location').value(),
-                record.field('abundance').value(),
-                record.field('recorder').value(),
-                record.field('determiner').value(),
-                record.field('record_type').value(),
-                record.field('source').value(),
-                record.field('comments').value(),
-                record.field('verification_level').value(),
             ])
 
             # Add the feature.
