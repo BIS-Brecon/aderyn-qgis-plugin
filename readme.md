@@ -27,4 +27,4 @@ The resuting data is then written to shape files (and CSV if requested) and disp
 This plugin has been developed by the BIS (Biodiversity Information Service https://www.bis.org.uk/).
 Please contact BIS with any questions you may have about the plugin or with suggestons for further development.
 
-The GitHub repository can also be used to log issues and suggest enhancements.
+The GitHub repository can also be used to log issues and suggest enhancements - https://github.com/stevegoddard/aderyn-qgis-plugin.
