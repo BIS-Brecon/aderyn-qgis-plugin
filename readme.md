@@ -1,6 +1,6 @@
 ### Aderyn Data Search
 
-The Aderyn Data Search plugin allows direct searching of the LERC Wales merged database.
+The Aderyn Data Search plugin allows direct searching of the LERC Wales merged database - Aderyn (https://aderyn.lercwales.org.uk/).
 LERC Wales are a consortium of the four Welsh LERCs (Local Environmental Record Centres). 
 Assembled serveral years ago - and constantly updated - the database contains almost 12 million wildlife records from accross Wales.
 Access to the merged database is restricted due to the sensitive nature of many of the records. However, direct access is available to partner organisations and thsoe with service level agreements with LERC Wales.  
