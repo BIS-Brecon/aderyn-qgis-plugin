@@ -1,34 +1,30 @@
-### Plugin Builder Results
+### Aderyn Data Search
 
-Congratulations! You just built a plugin for QGIS!  
+The Aderyn Data Search plugin allows direct searching of the LERC Wales merged database.
+LERC Wales are a consortium of the four Welsh LERCs (Local Environmental Record Centres). 
+Assembled serveral years ago - and constantly updated - the database contains almost 12 million wildlife records from accross Wales.
+Access to the merged database is restricted due to the sensitive nature of many of the records. However, direct access is available to partner organisations and thsoe with service level agreements with LERC Wales.  
 
-<div id="help" style="font-size:.9em;">Your plugin **Aderyn** was created in:  
-  **C:/QGIS Plugins\aderyn**
+To learn more about LERC Wales, visit https://www.lercwales.org.uk/
 
-Your QGIS plugin directory is located at:  
-  **C:/Users/steve/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins**
+The plugin allows a user to enter a UK grid reference and search for categories of species within a buffered distance of that grid reference.
+The resuting data is then written to shape files (and CSV if requested) and displayed within QGIS.
 
-### What's Next
+### How to Use the Plugin
 
-1.  In your plugin directory, compile the resources file using pyrcc5 (simply run **make** if you have automake or use **pb_tool**)
-2.  Test the generated sources using **make test** (or run tests from your IDE)
-3.  Copy the entire directory containing your new plugin to the QGIS plugin directory (see Notes below)
-4.  Test the plugin by enabling it in the QGIS plugin manager
-5.  Customize it by editing the implementation file **aderyn.py**
-6.  Create your own custom icon, replacing the default **icon.png**
-7.  Modify your user interface by opening **aderyn_dialog_base.ui** in Qt Designer
+1.  Access to the merged database is restricted due to the sensitive nature of many of the records. If you are a partner organisation or have an SLA with LERC Wales, contact us to obtain a username and password for the database.
+2.  Enter the database settings (username, password and IP address) in the setting window (Database > Aderyn Data Search > Settings). Once saved, use the 'Test Database Connection' button in the main window to ensure a record is returned from the database.
+3.  Ensure the map view is in OSGB36 (EPSG:27700) projection.
+4.  Enter a grid reference in the location box and click 'Locate' to pan/zoom the map.
+5.  Enter a search name (this will be used to name the exported files).
+6.  Select the output folder where the shape files will be saved.
+7.  Select the required categories. If a category is selected, a buffer distance must be specified.
+8.  If you require a CSV (comma separated value) file for each shape file, select the CSV box.
+9.  Click OK run the search. The results will be displayed within QGIS. 
 
-Notes:
+### Help & Support
 
-*   You can use the **Makefile** to compile and deploy when you make changes. This requires GNU make (gmake). The Makefile is ready to use, however you will have to edit it to add addional Python source files, dialogs, and translations.
-*   You can also use **pb_tool** to compile and deploy your plugin. Tweak the _pb_tool.cfg_ file included with your plugin as you add files. Install **pb_tool** using _pip_ or _easy_install_. See **http://loc8.cc/pb_tool** for more information.
+This plugin has been developed by the BIS (Biodiversity Information Service https://www.bis.org.uk/).
+Please contact BIS with any questions you may have about the plugin or with suggestons for further development.
 
-</div>
-
-<div style="font-size:.9em;">
-
-For information on writing PyQGIS code, see **http://loc8.cc/pyqgis_resources** for a list of resources.
-
-</div>
-
-©2011-2018 GeoApt LLC - geoapt.com
+The GitHub repository can also be used to log issues and suggest enhancements.
