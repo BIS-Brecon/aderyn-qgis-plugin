@@ -497,10 +497,8 @@ class Aderyn:
         s.setValue("aderyn/dbuser", self.dbuser)
         s.setValue("aderyn/dbpassword", self.dbpassword)
         s.setValue("aderyn/dbport", 5432)
-        QMessageBox.information(None, "Success!", str('Settings saved!'))
 
-        #Now load the setting to refresh the setting being used by the plugin.
-        self.loadSetings()
+        QMessageBox.information(None, "Success!", str('Settings saved!'))
 
     def testDatabaseConnection(self):
         """Test the database connection to LERC Wales merged database."""
