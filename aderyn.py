@@ -30,6 +30,9 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from . import osgr
+import csv
+import xlsxwriter
+import datetime
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -40,7 +43,6 @@ import os.path
 import random
 import json
 import aderyn_query
-
 
 class Aderyn:
     """QGIS Plugin Implementation."""
@@ -112,6 +114,7 @@ class Aderyn:
         self.SearchName = NULL
         self.SearchOutputFolder = NULL
         self.SearchCategories = []
+        self.SearchCSVs = []
         self.Cat1Select = NULL
         self.Cat1Buffer = NULL
         self.Cat2Select = NULL
@@ -314,19 +317,24 @@ class Aderyn:
         """ Add the categories to array if they are true and there is s buffer. """
         self.SearchCategories = []
         if self.Cat3Select is True and self.Cat3Buffer >= 1:
-            cat3 = ['CAT3', self.Cat3Buffer, 'yellow']
+            fileName = 'cat3' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.Cat3Buffer)
+            cat3 = ['CAT3', self.Cat3Buffer, 'yellow', fileName, 'Locally Important Species']
             self.SearchCategories.append(cat3)
         if self.Cat2Select is True and self.Cat2Buffer >= 1:
-            cat2 = ['CAT2', self.Cat2Buffer, 'orange']
+            fileName = 'cat2' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.Cat2Buffer)
+            cat2 = ['CAT2', self.Cat2Buffer, 'orange', fileName, 'Species of Conservation Concern']
             self.SearchCategories.append(cat2)
         if self.Cat1Select is True and self.Cat1Buffer >= 1:
-            cat1 = ['CAT1', self.Cat1Buffer, 'red']
+            fileName = 'cat1' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.Cat1Buffer)
+            cat1 = ['CAT1', self.Cat1Buffer, 'red', fileName, 'Priority Species']
             self.SearchCategories.append(cat1)
         if self.Cat4Select is True and self.Cat4Buffer >= 1:
-            cat4 = ['CAT4', self.Cat4Buffer, 'black']
+            fileName = 'cat4' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.Cat4Buffer)
+            cat4 = ['CAT4', self.Cat4Buffer, 'black', fileName, 'Other Species']
             self.SearchCategories.append(cat4)
         if self.BatsSelect is True and self.BatsBuffer >= 1:
-            bats = ['BATS', self.BatsBuffer, 'grey']
+            fileName = 'bats' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.BatsBuffer)
+            bats = ['BATS', self.BatsBuffer, 'grey', fileName, 'Bats']
             self.SearchCategories.append(bats)
 
         if len(self.SearchCategories) > 0:
@@ -544,7 +552,7 @@ class Aderyn:
         """ Ser the folder name in the output line edit."""
         self.dlg.le_ouput_folder.setText(text)
 
-    def runSearch(self, category, buffer):
+    def runSearch(self, category, buffer, fileName):
         """Run the search using the parameters suplied."""
         # QMessageBox.information(None, "Success!", str('You clicked ok - searching ' + category + '!'))
         db = QSqlDatabase.addDatabase('QPSQL')
@@ -583,11 +591,11 @@ class Aderyn:
                 if query.size() > 0:
 
                     # Create the shapefile and get the name of the file.
-                    shapeFile = self.createShapefile(category, buffer, query)
+                    shapeFile = self.createShapefile(category, buffer, query, fileName)
 
                     # Get the file name - for adding it to the interface.
-                    fileName = shapeFile + '.shp';
-                    newFile = os.path.join(self.SearchOutputFolder, fileName)
+                    fileNameShp = shapeFile + '.shp';
+                    newFile = os.path.join(self.SearchOutputFolder, fileNameShp)
 
                     # Add the shapefile to QGIS'
                     layer = iface.addVectorLayer(newFile, category + ' - ' + self.SearchName, "ogr")
@@ -596,28 +604,30 @@ class Aderyn:
                         # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFile + ')!'))
                     else:
                         # Style the layer.
-                        self.styleShapefile(layer, category)
+                        self.styleShapefile(layer, category, fileName)
 
                         # If selected, convert the layer to a CSV.
                         if self.CsvSelect:
-                            self.createCsv(layer, category)
+                            self.createCsv(layer, category, fileName)
 
                 else:
                     self.iface.messageBar().pushMessage("Warning", category + ' did not return any records! (' + str(query.size()) + ')', level=Qgis.Warning)
 
                 # Close the connection.
                 db.removeDatabase('QPSQL')
+
             else:
                 QMessageBox.information(None, "Error!", str('Unable to open database!'))
+
         else:
             QMessageBox.information(None, "Error!", str('Invalid database specification!'))
 
-    def createShapefile(self, category, buffer, query):
+    def createShapefile(self, category, buffer, query, fileName):
         """ Take query object and create shapefile. """
         # Create a writer.
         writerCrs = QgsCoordinateReferenceSystem(27700)
         shapefileType = QgsWkbTypes.Point  # Point - could be polygon.
-        fileName = category.lower() + '_' + self.SearchName.replace(" ", "_").lower() + '_' + buffer
+        #fileName = category.lower() + '_' + self.SearchName.replace(" ", "_").lower() + '_' + buffer
         outputFile = os.path.join(self.SearchOutputFolder, fileName)
         QgsMessageLog.logMessage('Output file: ' + outputFile + '.', 'Aderyn')
         fields = QgsFields()
@@ -688,22 +698,78 @@ class Aderyn:
         # Return the name of the shapefile.
         return fileName
 
-    def createCsv(self, layer, category):
+    def createCsv(self, layer, category, fileName):
         """ Create CSV file from the layer. """
-        fileName = layer.source()
+        #fileName = layer.source()
 
         #Get filename for CSV.
-        base = os.path.splitext(fileName)[0]
-        fileNameCsv = base + '.csv'
-        QgsMessageLog.logMessage('Creating CSV file: ' + fileNameCsv, 'Aderyn')
+        #base = os.path.splitext(fileName)[0]
+        #fileNameCsv = base + '.csv'
+        outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.csv'
+
+        #Add the CSV to the array of CSVs. We'll use this later to create the XLS.
+        # self.SearchCSVs.append(outputFile)
+
+        QgsMessageLog.logMessage('Creating CSV file: ' + outputFile, 'Aderyn')
 
         #Set the CSR.
         writerCrs = QgsCoordinateReferenceSystem(27700)  # Not sure if we need this.
-        error = QgsVectorFileWriter.writeAsVectorFormat(layer, fileNameCsv, "utf-8", writerCrs, "CSV", layerOptions=['GEOMETRY=AS_WKT'])
+        error = QgsVectorFileWriter.writeAsVectorFormat(layer, outputFile, "utf-8", writerCrs, "CSV", layerOptions=['GEOMETRY=AS_WKT'])
         if error == QgsVectorFileWriter.NoError:
-            QgsMessageLog.logMessage('Successfully creating CSV file: ' + fileNameCsv, 'Aderyn')
+            QgsMessageLog.logMessage('Successfully creating CSV file: ' + outputFile, 'Aderyn')
 
-    def styleShapefile(self, layer, category):
+    def createXlsx(self):
+        """ Create the XLSX file from any CSV files. """
+        QgsMessageLog.logMessage('Creating XLSX file...', 'Aderyn')
+
+        #Create the XLSX file.
+        searchNameCleaned = self.SearchName.replace(" ", "_").lower()
+        xlsxFile = os.path.join(self.SearchOutputFolder, searchNameCleaned) + '.xlsx'
+        workbook = xlsxwriter.Workbook(xlsxFile)
+        cell_format_bold = workbook.add_format({'bold': True})
+        cell_format_bold_medium = workbook.add_format({'bold': True, 'font_size': 14})
+        cell_format_bold_large = workbook.add_format({'bold': True, 'font_size': 26})
+        QgsMessageLog.logMessage('Created XLSX file ' + xlsxFile, 'Aderyn')
+
+        #Add the overview sheet.
+        worksheet = workbook.add_worksheet('Information')
+        worksheet.write('B2', 'BIODIVERSITY INFORMATION SEARCH:', cell_format_bold_large)
+        worksheet.write('B4', self.SearchName, cell_format_bold_large)
+        worksheet.write('B5', self.SearchLocation.upper(), cell_format_bold_large)
+        dateString = datetime.date.today().strftime("%d/%m/%Y")
+        worksheet.write('B7', 'Prepared on behalf of XXXXXX on ' + dateString, cell_format_bold_medium)
+        worksheet.write('B9', 'This report is confidential and should not be passed onto third parties without prior permission from BIS, unless they are named on the associated Data Enquiry and Release Form (DERF). ')
+        worksheet.write('B10', 'The data contained within the report is not to be copied, distributed, disseminated, published or broadcast in any format, including on the internet, to anyone unless named on the associated DERF.')
+        worksheet.write('B11', 'For full terms and conditions and the names listed on the DERF, please see the appendix attached to the end of this report. ')
+        worksheet.write('B12', 'https://www.bis.org.uk/upload/library/NRW_Data_EFGR__resolution_release.pdf')
+
+        #Loop through categories and add the CSV files.
+        for category in self.SearchCategories:
+            # cat1 = ['CAT1', self.Cat1Buffer, 'red', fileName, 'Priority Species']
+            QgsMessageLog.logMessage('Processing CSV file ' + category[3], 'Aderyn')
+            csvFile = os.path.join(self.SearchOutputFolder, category[3]) + '.csv'
+            worksheet = workbook.add_worksheet(category[4])
+            worksheet.write('A1', 'SENSITIVE SPECIES RECORDS ARE HIGHLIGHTED IN BOLD – do NOT release into public domain', cell_format_bold)
+            with open(csvFile, 'rt', encoding='utf8') as f:
+                reader = csv.reader(f)
+                for r, row in enumerate(reader):
+                    # QgsMessageLog.logMessage('Sensitive: ' + row[2], 'Aderyn')
+                    if row[2] == 't':
+                        for c, col in enumerate(row):
+                            worksheet.write(r + 1, c, col, cell_format_bold) #We've added the first row already - so r + 1.
+                    else:
+                        for c, col in enumerate(row):
+                            worksheet.write(r + 1, c, col) #We've added the first row already - so r + 1.
+
+        #Add the T&C sheet.
+        worksheet = workbook.add_worksheet('T&C')
+        worksheet.write('A1', 'APPENDIX - Terms and Conditions of Data Supply', cell_format_bold)
+        worksheet.write('A3', 'These are the terms and conditions that our client originally signed up to.  If you are in possession of this report and were not named on the DERF, you are not permitted to use any part of the report or its contents for any reason. ')
+        worksheet.write('A5', 'SENSITIVE AND CONFIDENTIAL INFORMATION:', cell_format_bold)
+
+        workbook.close()
+
+    def styleShapefile(self, layer, category, fileName):
         """ Style the layer - and save the resulting QML file. """
         renderer = layer.renderer()
         if category == 'CAT1':
@@ -726,9 +792,10 @@ class Aderyn:
         iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
 
         # Save the style file for future use in QGIS. Get the layer source and change the file extension.
-        base = os.path.splitext(layer.source())[0]
-        newFileQml = base + '.qml'
-        layer.saveNamedStyle(newFileQml)
+        #base = os.path.splitext(layer.source())[0]
+        #newFileQml = base + '.qml'
+        outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.qml'
+        layer.saveNamedStyle(outputFile)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -777,7 +844,8 @@ class Aderyn:
                 for category in self.SearchCategories:
 
                     QgsMessageLog.logMessage('Looping - search ' + category[0] + ', buffer ' + str(category[1]), 'Aderyn')
-                    self.runSearch(category[0], str(category[1]))
+                    #cat1 = ['CAT1', self.Cat1Buffer, 'red', fileName, 'Priority Species']
+                    self.runSearch(category[0], str(category[1]), category[3])
 
                     couter += 1 # Increment.
                     progress.setValue(couter)
@@ -792,6 +860,10 @@ class Aderyn:
                 #     self.runSearch("CAT4", str(self.Cat4Buffer))
                 # if self.BatsSelect == True:
                 #     self.runSearch("BATS", str(self.BatsBuffer))
+
+                # If CSV was selected, loop through the CSVs and add them to an XSLX file.
+                if self.CsvSelect:
+                    self.createXlsx()
 
                 iface.messageBar().clearWidgets()
 
