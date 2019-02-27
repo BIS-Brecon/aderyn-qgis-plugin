@@ -31,8 +31,9 @@ from qgis.gui import *
 from qgis.utils import *
 from . import osgr
 import csv
-import xlsxwriter
 import datetime
+import subprocess
+import sys
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -42,7 +43,36 @@ from .settings_dialog import SettingsDialog
 import os.path
 import random
 import json
-import aderyn_query
+from aderyn_query import AderynQuery
+from aderyn_spreadsheet import AderynSpreadsheet
+
+#Extra libraries.
+import xlsxwriter
+
+# # Install extra libraries.
+# plugin_dir = os.path.dirname(__file__)
+# #PIP
+# try:
+#     import pip
+# except:
+#     exec(open(os.path.join(plugin_dir, 'get_pip.py')).read())
+#     import pip
+#
+# #Import pip.main - allow for version 3 & 4.
+# try:
+#     from pip import main as pipmain
+# except:
+#     from pip._internal import main as pipmain
+#
+# #Upgrade PIP.
+# pipmain(['install', '--upgrade', 'pip'])
+#
+# #XlsxWriter
+# try:
+#     import XlsxWriter
+# except:
+#     pipmain(['install', '-q', 'XlsxWriter'])
+#     import XlsxWriter
 
 class Aderyn:
     """QGIS Plugin Implementation."""
@@ -55,6 +85,7 @@ class Aderyn:
             application at run time.
         :type iface: QgsInterface
         """
+
         # Save reference to the QGIS interface
         self.iface = iface
         self.canvas = iface.mapCanvas()
@@ -523,7 +554,8 @@ class Aderyn:
                 # QMessageBox.information(None, "Success!", str('Database opened!'))
                 QgsMessageLog.logMessage('Database opened successfully.', 'Aderyn')
                 offset = str(random.randint(1, 100000))
-                AderynQueryObj = aderyn_query.AderynQuery()
+                # AderynQueryObj = aderyn_query.AderynQuery()
+                AderynQueryObj = AderynQuery()
                 queryString = AderynQueryObj.sqlQueryTest(offset)
                 # query = db.exec_("SELECT * FROM lrc_wales_data.records LIMIT 1 OFFSET " + offset)
                 query = db.exec_(queryString)
@@ -581,7 +613,8 @@ class Aderyn:
                 QgsMessageLog.logMessage('WKT: ' + wkt + '.', 'Aderyn')
                 QgsMessageLog.logMessage('WKT Centre: ' + wkt_centre + '.', 'Aderyn')
                 # Build the query string.
-                AderynQueryObj = aderyn_query.AderynQuery()
+                # AderynQueryObj = aderyn_query.AderynQuery()
+                AderynQueryObj = AderynQuery()
                 queryString = AderynQueryObj.sqlQuery(category, wkt, wkt_centre, buffer)
                 # QgsMessageLog.logMessage('SQL: ' + queryString + '', 'Aderyn')
                 query = db.exec_(queryString)
@@ -726,22 +759,33 @@ class Aderyn:
         searchNameCleaned = self.SearchName.replace(" ", "_").lower()
         xlsxFile = os.path.join(self.SearchOutputFolder, searchNameCleaned) + '.xlsx'
         workbook = xlsxwriter.Workbook(xlsxFile)
+        QgsMessageLog.logMessage('Created XLSX file ' + xlsxFile, 'Aderyn')
+
+        #Add formats.
         cell_format_bold = workbook.add_format({'bold': True})
         cell_format_bold_medium = workbook.add_format({'bold': True, 'font_size': 14})
         cell_format_bold_large = workbook.add_format({'bold': True, 'font_size': 26})
-        QgsMessageLog.logMessage('Created XLSX file ' + xlsxFile, 'Aderyn')
+        cell_format_bold_border = workbook.add_format({'bold': True})
+        cell_format_bold_border.set_border()
+
+        #Setup spreadhseet class.
+        AderynSpreadsheetObj = AderynSpreadsheet(self.SearchName, self.SearchLocation)
 
         #Add the overview sheet.
         worksheet = workbook.add_worksheet('Information')
-        worksheet.write('B2', 'BIODIVERSITY INFORMATION SEARCH:', cell_format_bold_large)
-        worksheet.write('B4', self.SearchName, cell_format_bold_large)
-        worksheet.write('B5', self.SearchLocation.upper(), cell_format_bold_large)
-        dateString = datetime.date.today().strftime("%d/%m/%Y")
-        worksheet.write('B7', 'Prepared on behalf of XXXXXX on ' + dateString, cell_format_bold_medium)
-        worksheet.write('B9', 'This report is confidential and should not be passed onto third parties without prior permission from BIS, unless they are named on the associated Data Enquiry and Release Form (DERF). ')
-        worksheet.write('B10', 'The data contained within the report is not to be copied, distributed, disseminated, published or broadcast in any format, including on the internet, to anyone unless named on the associated DERF.')
-        worksheet.write('B11', 'For full terms and conditions and the names listed on the DERF, please see the appendix attached to the end of this report. ')
-        worksheet.write('B12', 'https://www.bis.org.uk/upload/library/NRW_Data_EFGR__resolution_release.pdf')
+        lines = AderynSpreadsheetObj.linesInformation()
+        for line in lines:
+            if len(line) == 3:
+                if line[2] == 'cell_format_bold':
+                    worksheet.write(line[0], line[1], cell_format_bold)
+                elif line[2] == 'cell_format_bold_medium':
+                    worksheet.write(line[0], line[1], cell_format_bold_medium)
+                elif line[2] == 'cell_format_bold_large':
+                    worksheet.write(line[0], line[1], cell_format_bold_large)
+                else:
+                    worksheet.write(line[0], line[1])
+            else:
+                worksheet.write(line[0], line[1])
 
         #Loop through categories and add the CSV files.
         for category in self.SearchCategories:
@@ -763,10 +807,41 @@ class Aderyn:
 
         #Add the T&C sheet.
         worksheet = workbook.add_worksheet('T&C')
-        worksheet.write('A1', 'APPENDIX - Terms and Conditions of Data Supply', cell_format_bold)
-        worksheet.write('A3', 'These are the terms and conditions that our client originally signed up to.  If you are in possession of this report and were not named on the DERF, you are not permitted to use any part of the report or its contents for any reason. ')
-        worksheet.write('A5', 'SENSITIVE AND CONFIDENTIAL INFORMATION:', cell_format_bold)
+        worksheet.set_column('A:A', 35) #Increase the width.
+        worksheet.set_column('B:B', 35)
+        worksheet.set_column('C:C', 35)
+        lines = AderynSpreadsheetObj.linesTandC()
+        for line in lines:
+            if line[0] == 'text':
+                if len(line) == 4:
+                    if line[3] == 'cell_format_bold':
+                        worksheet.write(line[1], line[2], cell_format_bold)
+                    elif line[3] == 'cell_format_bold_medium':
+                        worksheet.write(line[1], line[2], cell_format_bold_medium)
+                    elif line[3] == 'cell_format_bold_large':
+                        worksheet.write(line[1], line[2], cell_format_bold_large)
+                    elif line[3] == 'cell_format_bold_border':
+                        worksheet.write(line[1], line[2], cell_format_bold_border)
+                    else:
+                        worksheet.write(line[1], line[2])
+                else:
+                    worksheet.write(line[1], line[2])
+            elif line[0] == 'merge':
+                if len(line) == 4:
+                    if line[3] == 'cell_format_bold':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold)
+                    elif line[3] == 'cell_format_bold_medium':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold_medium)
+                    elif line[3] == 'cell_format_bold_large':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold_large)
+                    elif line[3] == 'cell_format_bold_border':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold_border)
+                    else:
+                        worksheet.merge_range(line[1], line[2])
+                else:
+                    worksheet.merge_range(line[1], line[2])
 
+        #Close.
         workbook.close()
 
     def styleShapefile(self, layer, category, fileName):
