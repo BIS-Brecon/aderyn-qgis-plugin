@@ -584,7 +584,6 @@ class Aderyn:
         """ Ser the folder name in the output line edit."""
         self.dlg.le_ouput_folder.setText(text)
 
-
     def createShapefile(self, category, buffer, query, fileName):
         """ Take query object and create shapefile. """
         # Create a writer.
