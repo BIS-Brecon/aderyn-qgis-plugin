@@ -13,19 +13,19 @@ class AderynSpreadsheet:
         dateString = datetime.date.today().strftime("%d/%m/%Y")
 
         lines = []
-        lines.append(['B2', 'BIODIVERSITY INFORMATION SEARCH:', 'cell_format_bold_large'])
-        lines.append(['B4', self.SearchName, 'cell_format_bold_large'])
-        lines.append(['B5', self.SearchLocation.upper(), 'cell_format_bold_large'])
-        lines.append(['B7', 'Prepared on behalf of XXXXXX on ' + dateString, 'cell_format_bold_medium'])
-        lines.append(['B9', 'This report is confidential and should not be passed onto third parties without prior permission from BIS, unless they are named on the associated Data Enquiry and Release Form (DERF). '])
-        lines.append(['B10', 'The data contained within the report is not to be copied, distributed, disseminated, published or broadcast in any format, including on the internet, to anyone unless named on the associated DERF.'])
-        lines.append(['B11', 'For full terms and conditions and the names listed on the DERF, please see the appendix attached to the end of this report. '])
-        lines.append(['B12', 'https://www.bis.org.uk/upload/library/NRW_Data_EFGR__resolution_release.pdf'])
+        lines.append(['text', 'B2', 'BIODIVERSITY INFORMATION SEARCH:', 'cell_format_bold_large'])
+        lines.append(['text', 'B4', self.SearchName, 'cell_format_bold_large'])
+        lines.append(['text', 'B5', self.SearchLocation.upper(), 'cell_format_bold_large'])
+        lines.append(['text', 'B7', 'Prepared on behalf of XXXXXX on ' + dateString, 'cell_format_bold_medium'])
+        lines.append(['text', 'B9', 'This report is confidential and should not be passed onto third parties without prior permission from BIS, unless they are named on the associated Data Enquiry and Release Form (DERF). '])
+        lines.append(['text', 'B10', 'The data contained within the report is not to be copied, distributed, disseminated, published or broadcast in any format, including on the internet, to anyone unless named on the associated DERF.'])
+        lines.append(['text', 'B11', 'For full terms and conditions and the names listed on the DERF, please see the appendix attached to the end of this report. '])
+        lines.append(['text', 'B12', 'https://www.bis.org.uk/upload/library/NRW_Data_EFGR__resolution_release.pdf'])
 
-        lines.append(['B15', 'For further ecological advice on records in this report please see contact notes at end of report or contact relevant County Recorder.'])
-        lines.append(['B16', 'Details on BIS website     https://www.bis.org.uk/get_involved/find_an_expert'])
+        lines.append(['text', 'B15', 'For further ecological advice on records in this report please see contact notes at end of report or contact relevant County Recorder.'])
+        lines.append(['text', 'B16', 'Details on BIS website     https://www.bis.org.uk/get_involved/find_an_expert'])
 
-        lines.append(['B18', 'For detailed information on Designated Sites in Wales go to NRW website http://naturalresourceswales.gov.uk/'])
+        lines.append(['text', 'B18', 'For detailed information on Designated Sites in Wales go to NRW website http://naturalresourceswales.gov.uk/'])
 
         return lines
 

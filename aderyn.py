@@ -584,76 +584,6 @@ class Aderyn:
         """ Ser the folder name in the output line edit."""
         self.dlg.le_ouput_folder.setText(text)
 
-    def runSearch(self, category, buffer, fileName):
-        """Run the search using the parameters suplied."""
-        # QMessageBox.information(None, "Success!", str('You clicked ok - searching ' + category + '!'))
-        db = QSqlDatabase.addDatabase('QPSQL')
-        if db.isValid():
-            db.setHostName(self.dbhost)
-            db.setDatabaseName(self.dbname)
-            db.setUserName(self.dbuser)
-            db.setPassword(self.dbpassword)
-            db.setPort(int(self.dbport))
-            if db.open():
-                # QMessageBox.information(None, "Success!", str('Database opened!'))
-                QgsMessageLog.logMessage('Database opened successfully.', 'Aderyn')
-                QgsMessageLog.logMessage('Searching ' + category + ', buffer ' + buffer, 'Aderyn')
-
-                # Build the centre WKT. self.gridSquareCentre = centre ~ centre = QgsPointXY(res[0], res[1])
-                wkt_centre = 'POINT(' \
-                             + str(self.gridSquareCentre.x()) + ' ' + str(self.gridSquareCentre.y()) + ')'
-
-                # Build the WKT.
-                wkt = 'POLYGON((' \
-                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
-                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMaximum()) + ',' \
-                      + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMaximum()) + ',' \
-                      + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
-                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + '))'
-                QgsMessageLog.logMessage('WKT: ' + wkt + '.', 'Aderyn')
-                QgsMessageLog.logMessage('WKT Centre: ' + wkt_centre + '.', 'Aderyn')
-                # Build the query string.
-                # AderynQueryObj = aderyn_query.AderynQuery()
-                AderynQueryObj = AderynQuery()
-                queryString = AderynQueryObj.sqlQuery(category, wkt, wkt_centre, buffer)
-                # QgsMessageLog.logMessage('SQL: ' + queryString + '', 'Aderyn')
-                query = db.exec_(queryString)
-                QgsMessageLog.logMessage(category + ' query returned ' + str(query.size()) + ' rows.', 'Aderyn')
-
-                # Did we get any data?
-                if query.size() > 0:
-
-                    # Create the shapefile and get the name of the file.
-                    shapeFile = self.createShapefile(category, buffer, query, fileName)
-
-                    # Get the file name - for adding it to the interface.
-                    fileNameShp = shapeFile + '.shp';
-                    newFile = os.path.join(self.SearchOutputFolder, fileNameShp)
-
-                    # Add the shapefile to QGIS'
-                    layer = iface.addVectorLayer(newFile, category + ' - ' + self.SearchName, "ogr")
-                    if not layer:
-                        self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFile + ')!', level=Qgis.Warning)
-                        # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFile + ')!'))
-                    else:
-                        # Style the layer.
-                        self.styleShapefile(layer, category, fileName)
-
-                        # If selected, convert the layer to a CSV.
-                        if self.CsvSelect:
-                            self.createCsv(layer, category, fileName)
-
-                else:
-                    self.iface.messageBar().pushMessage("Warning", category + ' did not return any records! (' + str(query.size()) + ')', level=Qgis.Warning)
-
-                # Close the connection.
-                db.removeDatabase('QPSQL')
-
-            else:
-                QMessageBox.information(None, "Error!", str('Unable to open database!'))
-
-        else:
-            QMessageBox.information(None, "Error!", str('Invalid database specification!'))
 
     def createShapefile(self, category, buffer, query, fileName):
         """ Take query object and create shapefile. """
@@ -773,22 +703,42 @@ class Aderyn:
 
         #Add the overview sheet.
         worksheet = workbook.add_worksheet('Information')
+        worksheet.set_column('A:A', 3)  # Decrease the width.
         lines = AderynSpreadsheetObj.linesInformation()
         for line in lines:
-            if len(line) == 3:
-                if line[2] == 'cell_format_bold':
-                    worksheet.write(line[0], line[1], cell_format_bold)
-                elif line[2] == 'cell_format_bold_medium':
-                    worksheet.write(line[0], line[1], cell_format_bold_medium)
-                elif line[2] == 'cell_format_bold_large':
-                    worksheet.write(line[0], line[1], cell_format_bold_large)
+            if line[0] == 'text':
+                if len(line) == 4:
+                    if line[3] == 'cell_format_bold':
+                        worksheet.write(line[1], line[2], cell_format_bold)
+                    elif line[3] == 'cell_format_bold_medium':
+                        worksheet.write(line[1], line[2], cell_format_bold_medium)
+                    elif line[3] == 'cell_format_bold_large':
+                        worksheet.write(line[1], line[2], cell_format_bold_large)
+                    elif line[3] == 'cell_format_bold_border':
+                        worksheet.write(line[1], line[2], cell_format_bold_border)
+                    else:
+                        worksheet.write(line[1], line[2])
                 else:
-                    worksheet.write(line[0], line[1])
-            else:
-                worksheet.write(line[0], line[1])
+                    worksheet.write(line[1], line[2])
+            elif line[0] == 'merge':
+                if len(line) == 4:
+                    if line[3] == 'cell_format_bold':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold)
+                    elif line[3] == 'cell_format_bold_medium':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold_medium)
+                    elif line[3] == 'cell_format_bold_large':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold_large)
+                    elif line[3] == 'cell_format_bold_border':
+                        worksheet.merge_range(line[1], line[2], cell_format_bold_border)
+                    else:
+                        worksheet.merge_range(line[1], line[2])
+                else:
+                    worksheet.merge_range(line[1], line[2])
 
         #Loop through categories and add the CSV files.
-        for category in self.SearchCategories:
+        categories = self.SearchCategories
+        categories = categories[::-1] #Reverse the list - we want to add cat1 first etc.
+        for category in categories:
             # cat1 = ['CAT1', self.Cat1Buffer, 'red', fileName, 'Priority Species']
             QgsMessageLog.logMessage('Processing CSV file ' + category[3], 'Aderyn')
             csvFile = os.path.join(self.SearchOutputFolder, category[3]) + '.csv'
@@ -866,11 +816,107 @@ class Aderyn:
         # Update the symbolgy on the layer tree (refresh)
         iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
 
+        #Add labels.
+        layer_settings = QgsPalLayerSettings()
+        layer_settings.fieldName = "grid_ref"
+        # layer_settings.fieldName = "concat(grid_ref, ' (', actual_nam, ')')"
+        layer_settings.isExpression = True
+        layer_settings.placement = QgsPalLayerSettings.AroundPoint
+
+        # layer_settings.OffsetType = QgsPalLayerSettings.AroundPoint
+        layer_settings.OffsetType = QgsPalLayerSettings.FromPoint
+        layer_settings.OffsetUnits = QgsUnitTypes.RenderUnit.RenderMillimeters
+        layer_settings.dist = 1
+        layer_settings.enabled = True
+
+        text_format = QgsTextFormat()
+        text_format.setFont(QFont("Arial", 10))
+        text_format.setSize(10)
+        layer_settings.setFormat(text_format)
+
+        labeling = QgsVectorLayerSimpleLabeling(layer_settings)
+        layer.setLabelsEnabled(True)
+        layer.setLabeling(labeling)
+        layer.triggerRepaint()
+
         # Save the style file for future use in QGIS. Get the layer source and change the file extension.
         #base = os.path.splitext(layer.source())[0]
         #newFileQml = base + '.qml'
         outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.qml'
         layer.saveNamedStyle(outputFile)
+
+    def runSearch(self, category, buffer, fileName):
+        """Run the search using the parameters suplied."""
+        # QMessageBox.information(None, "Success!", str('You clicked ok - searching ' + category + '!'))
+        db = QSqlDatabase.addDatabase('QPSQL')
+        if db.isValid():
+            db.setHostName(self.dbhost)
+            db.setDatabaseName(self.dbname)
+            db.setUserName(self.dbuser)
+            db.setPassword(self.dbpassword)
+            db.setPort(int(self.dbport))
+            if db.open():
+                # QMessageBox.information(None, "Success!", str('Database opened!'))
+                QgsMessageLog.logMessage('Database opened successfully.', 'Aderyn')
+                QgsMessageLog.logMessage('Searching ' + category + ', buffer ' + buffer, 'Aderyn')
+
+                # Build the centre WKT. self.gridSquareCentre = centre ~ centre = QgsPointXY(res[0], res[1])
+                wkt_centre = 'POINT(' \
+                             + str(self.gridSquareCentre.x()) + ' ' + str(self.gridSquareCentre.y()) + ')'
+
+                # Build the WKT.
+                wkt = 'POLYGON((' \
+                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
+                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMaximum()) + ',' \
+                      + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMaximum()) + ',' \
+                      + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
+                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + '))'
+                QgsMessageLog.logMessage('WKT: ' + wkt + '.', 'Aderyn')
+                QgsMessageLog.logMessage('WKT Centre: ' + wkt_centre + '.', 'Aderyn')
+                # Build the query string.
+                # AderynQueryObj = aderyn_query.AderynQuery()
+                AderynQueryObj = AderynQuery()
+                queryString = AderynQueryObj.sqlQuery(category, wkt, wkt_centre, buffer)
+                # QgsMessageLog.logMessage('SQL: ' + queryString + '', 'Aderyn')
+                query = db.exec_(queryString)
+                QgsMessageLog.logMessage(category + ' query returned ' + str(query.size()) + ' rows.', 'Aderyn')
+
+                # Did we get any data?
+                if query.size() >= 0:
+
+                    # Create the shapefile and get the name of the file.
+                    shapeFile = self.createShapefile(category, buffer, query, fileName)
+
+                    # Get the file name - for adding it to the interface.
+                    fileNameShp = shapeFile + '.shp';
+                    newFile = os.path.join(self.SearchOutputFolder, fileNameShp)
+
+                    # Add the shapefile to QGIS'
+                    # layer = iface.addVectorLayer(newFile, category + ' - ' + self.SearchName, "ogr")
+                    layer = iface.addVectorLayer(newFile, category + ' - ' + self.SearchName + ' (' + buffer + 'm)', "ogr")
+
+                    if not layer:
+                        self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFile + ')!', level=Qgis.Warning)
+                        # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFile + ')!'))
+                    else:
+                        # Style the layer.
+                        self.styleShapefile(layer, category, fileName)
+
+                        # If selected, convert the layer to a CSV.
+                        if self.CsvSelect:
+                            self.createCsv(layer, category, fileName)
+
+                else:
+                    self.iface.messageBar().pushMessage("Warning", category + ' did not return any records! (' + str(query.size()) + ')', level=Qgis.Warning)
+
+                # Close the connection.
+                db.removeDatabase('QPSQL')
+
+            else:
+                QMessageBox.information(None, "Error!", str('Unable to open database!'))
+
+        else:
+            QMessageBox.information(None, "Error!", str('Invalid database specification!'))
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
