@@ -130,6 +130,8 @@ class AderynQuery:
         if category == 'BATS':
             #$this->search = $this->search->where('dmt.bat', true);
             sql = sql + 'AND dmt.bat = TRUE '
+        elif category == 'RNB':
+            sql = sql + 'AND dmt.rnb = TRUE '
         elif category == 'CAT4':
             sql = sql + 'AND (dmt.cat = \'' + category + '\' OR dmt.cat IS NULL) '
         else:

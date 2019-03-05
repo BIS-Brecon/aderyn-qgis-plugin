@@ -139,7 +139,8 @@ class Aderyn:
         self.gridSquareCentre = NULL  # QgsPointXY
         self.gridSquareRectangle = NULL  # QgsRectangle
         self.gridSquareRubberBand = NULL  # QgsRubberBand
-        self.gridSquareRubberBandMaxBuffer = 0  # QgsRubberBand - store the largest buffer.
+        self.gridSquareMaxBuffer = 0  # QgsRubberBand - store the largest buffer.
+        self.gridSquareMaxBufferBoundingBox = NULL
 
         self.SearchLocation = NULL
         self.SearchName = NULL
@@ -156,6 +157,8 @@ class Aderyn:
         self.Cat4Buffer = NULL
         self.BatsSelect = NULL
         self.BatsBuffer = NULL
+        self.RnbSelect = NULL
+        self.RnbBuffer = NULL
         self.CsvSelect = NULL
 
     # noinspection PyMethodMayBeStatic
@@ -270,7 +273,8 @@ class Aderyn:
         self.dlg.pb_test_database.clicked.connect(self.testDatabaseConnection)
 
         # Locate GR.
-        self.dlg.pb_locate.clicked.connect(self.locateGridref)
+        # self.dlg.pb_locate.clicked.connect(self.locateGridref)
+        self.dlg.pb_locate.clicked.connect(self.displayGridref)
 
         # Open settings dialogue. Just open it - rather than call a function in this file.
         self.dlg.pb_settings.clicked.connect(self.runSettings)
@@ -293,6 +297,8 @@ class Aderyn:
         self.Cat4Buffer = self.dlg.sb_cat4_buffer.value()
         self.BatsSelect = True if self.dlg.cb_bats.isChecked() == True else False
         self.BatsBuffer = self.dlg.sb_bats_buffer.value()
+        self.RnbSelect = True if self.dlg.cb_rnb.isChecked() == True else False
+        self.RnbBuffer = self.dlg.sb_rnb_buffer.value()
         self.CsvSelect = True if self.dlg.cb_csv.isChecked() == True else False
 
         # Output.
@@ -341,6 +347,10 @@ class Aderyn:
             # QMessageBox.information(None, "Error!", str('No buffer specified for bats!'))
             self.iface.messageBar().pushMessage("Warning", "No buffer specified for bats!", level=Qgis.Warning)
             self.run()
+        elif self.RnbSelect is True and self.RnbBuffer < 1:
+            # QMessageBox.information(None, "Error!", str('No buffer specified for RNB!'))
+            self.iface.messageBar().pushMessage("Warning", "No buffer specified for RNB!", level=Qgis.Warning)
+            self.run()
         else:
             return True
 
@@ -367,6 +377,10 @@ class Aderyn:
             fileName = 'bats' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.BatsBuffer)
             bats = ['BATS', self.BatsBuffer, 'grey', fileName, 'Bats']
             self.SearchCategories.append(bats)
+        if self.RnbSelect is True and self.RnbBuffer >= 1:
+            fileName = 'rnb' + '_' + self.SearchName.replace(" ", "_").lower() + '_' + str(self.RnbBuffer)
+            rnb = ['RNB', self.RnbBuffer, 'blue', fileName, 'Roof Nesting Birds']
+            self.SearchCategories.append(rnb)
 
         if len(self.SearchCategories) > 0:
             return True
@@ -422,12 +436,12 @@ class Aderyn:
                 rect = QgsRectangle(ll, ur)
                 # centre = QgsPointXY(res[0], res[1])
 
-                # Strore the centre and square.
+                # Store the centre and square.
                 self.gridSquareCentre = centre
                 self.gridSquareRectangle = rect
 
                 # Display the gridref.
-                self.displayGridref()
+                # self.displayGridref()
 
         else:
             self.iface.messageBar().pushMessage("Warning", "Grid Ref. Validation failed!", level=Qgis.Warning)
@@ -435,9 +449,10 @@ class Aderyn:
 
     def displayGridref(self):
 
-        # Create the gridref.
-        # gr = self.osgr.grFromEN(point.x(), point.y(), precision) #This just returns the gr string - i.e. SO2242
-        # self.iface.messageBar().pushMessage("Warning", gr, level=Qgis.Warning)
+        # Ensure the grid ref has been located and saved.
+        self.locateGridref()
+
+        #Get the grid ref.
         rect = self.gridSquareRectangle
         geometry = QgsGeometry()
         geometry = geometry.fromRect(rect)
@@ -482,8 +497,124 @@ class Aderyn:
             self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
             # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
 
-    def displayBuffer(self, buffer, colour):
+    def clearGridref(self):
+        """ Clear all rubber bands. """
 
+        # Get existing RubberBands
+        rbs = [i for i in iface.mapCanvas().scene().items()
+               if issubclass(type(i), qgis._gui.QgsRubberBand)]
+
+        # Remove existing RubberBands
+        for rb in rbs:
+            if rb in iface.mapCanvas().scene().items():
+                iface.mapCanvas().scene().removeItem(rb)
+
+    # def displayBuffer(self, buffer, colour):
+    #
+    #     #Convert buffer to int.
+    #     buffer = int(buffer)
+    #
+    #     # Buffer the rectangle. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+    #     rect = self.gridSquareRectangle
+    #     geometry = QgsGeometry()
+    #     geometry = geometry.fromRect(rect)
+    #     buffered = geometry.buffer(buffer, 10)
+    #
+    #     # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
+    #     self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
+    #     if self.canvasCrs == self.osgbCrs:
+    #
+    #         r = QgsRubberBand(self.canvas, False)  # False = a polyline
+    #         color = QColor(colour)
+    #         transparent = QColor(0, 0, 0, 0)
+    #         r.setToGeometry(buffered, None)
+    #         r.setColor(color)
+    #         r.setFillColor(transparent)
+    #         r.setWidth(2)
+    #
+    #         # Store the buffer - if it's larger than the existing buffer.
+    #         if buffer > self.gridSquareMaxBuffer:
+    #             self.gridSquareMaxBuffer = buffer
+    #             boundingbox = buffered.boundingBox()
+    #             self.canvas.setExtent(boundingbox)
+    #             # self.canvas.setExtent(buffered)
+    #             self.canvas.refresh()
+    #             self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
+    #
+    #     else:
+    #         self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
+    #         # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
+
+    def createShapefileSearchLocation(self):
+        """ Create (and add) shapefile for the search area (grid ref). """
+
+        # Get the rectangle. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+        rect = self.gridSquareRectangle
+        geometry = QgsGeometry()
+        geometry = geometry.fromRect(rect)
+
+        # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
+        self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
+        if self.canvasCrs == self.osgbCrs:
+
+            # Create a writer.
+            writerCrs = QgsCoordinateReferenceSystem(27700)
+            shapefileType = QgsWkbTypes.Polygon  # Point - could be polygon.
+            fileName = 'search_location'
+            outputFile = os.path.join(self.SearchOutputFolder, fileName)
+            QgsMessageLog.logMessage('Search location output file: ' + outputFile + '.', 'Aderyn')
+            fields = QgsFields()
+            fields.append(QgsField("id", QVariant.Int))
+            fields.append(QgsField("grid_ref", QVariant.String))
+            fields.append(QgsField("location", QVariant.String))
+            writer = QgsVectorFileWriter(outputFile, "CP1250", fields, shapefileType, writerCrs, "ESRI Shapefile")
+
+            # Errors?
+            if writer.hasError() != QgsVectorFileWriter.NoError:
+                print("Error when creating shapefile: ", writer.errorMessage())
+
+            # Write feature.
+            fet = QgsFeature()
+            fet.setGeometry(geometry)
+
+            # self.SearchLocation = NULL
+            # self.SearchName = NULL
+
+            # Add in one line.
+            fet.setAttributes([
+                1,
+                self.SearchName,
+                self.SearchLocation,
+            ])
+
+            # Add the feature.
+            writer.addFeature(fet)
+
+            # Delete the writer.
+            del writer
+
+            # Return the name of the shapefile.
+            return fileName
+
+        else:
+            self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
+            # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
+
+    def styleShapefileSearchLocation(self, layer, fileName):
+        """ Style the layer - and save the resulting QML file. """
+        renderer = layer.renderer()
+        symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+        renderer.setSymbol(symbol)
+
+        # Update the symbolgy on the layer tree (refresh)
+        iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
+
+        # Save the style file for future use in QGIS. Get the layer source and change the file extension.
+        outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.qml'
+        layer.saveNamedStyle(outputFile)
+
+    def createShapefileBuffer(self, category, buffer):
+        """ Create (and add) shapefile for a given point and buffer. """
         #Convert buffer to int.
         buffer = int(buffer)
 
@@ -497,26 +628,90 @@ class Aderyn:
         self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
         if self.canvasCrs == self.osgbCrs:
 
-            r = QgsRubberBand(self.canvas, False)  # False = a polyline
-            color = QColor(colour)
-            transparent = QColor(0, 0, 0, 0)
-            r.setToGeometry(buffered, None)
-            r.setColor(color)
-            r.setFillColor(transparent)
-            r.setWidth(2)
+            # Create a writer.
+            writerCrs = QgsCoordinateReferenceSystem(27700)
+            shapefileType = QgsWkbTypes.Polygon  # Point - could be polygon.
+            fileName = category.lower() + '_buffer_' + str(buffer)
+            outputFile = os.path.join(self.SearchOutputFolder, fileName)
+            QgsMessageLog.logMessage('Buffer ' + category + ' output file: ' + outputFile + '.', 'Aderyn')
+            fields = QgsFields()
+            fields.append(QgsField("id", QVariant.Int))
+            fields.append(QgsField("grid_ref", QVariant.String))
+            fields.append(QgsField("location", QVariant.String))
+            fields.append(QgsField("buffer", QVariant.Int))
+            writer = QgsVectorFileWriter(outputFile, "CP1250", fields, shapefileType, writerCrs, "ESRI Shapefile")
 
-            # Store the buffer - if it's larger than the existing buffer.
-            if buffer > self.gridSquareRubberBandMaxBuffer:
-                self.gridSquareRubberBandMaxBuffer = buffer
+            # Errors?
+            if writer.hasError() != QgsVectorFileWriter.NoError:
+                print("Error when creating shapefile: ", writer.errorMessage())
+
+            # Write feature.
+            fet = QgsFeature()
+            fet.setGeometry(buffered)
+
+            # self.SearchLocation = NULL
+            # self.SearchName = NULL
+
+            # Add in one line.
+            fet.setAttributes([
+                1,
+                self.SearchName,
+                self.SearchLocation,
+                buffer,
+            ])
+
+            # Add the feature.
+            writer.addFeature(fet)
+
+            # Delete the writer.
+            del writer
+
+            # Store the buffer - if it's larger than the existing buffer - so we know the bounding box of the largest buffer.
+            if buffer > self.gridSquareMaxBuffer:
+                self.gridSquareMaxBuffer = buffer
                 boundingbox = buffered.boundingBox()
-                self.canvas.setExtent(boundingbox)
-                # self.canvas.setExtent(buffered)
-                self.canvas.refresh()
-                self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
+                self.gridSquareMaxBufferBoundingBox = boundingbox
+
+                # # Zoom.
+                # self.canvas.setExtent(boundingbox)
+                # self.canvas.refresh()
+                # self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
+
+            # Return the name of the shapefile.
+            return fileName
 
         else:
             self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
             # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
+
+    def styleShapefileBuffer(self, layer, category, fileName):
+        """ Style the layer - and save the resulting QML file. """
+        renderer = layer.renderer()
+        if category == 'CAT1':
+            symbol = QgsFillSymbol.createSimple({'outline_color': 'red', 'outline_width': '0.66', 'outline_width_unit': 'MM', 'outline_style': 'solid', 'style':'no' })
+            renderer.setSymbol(symbol)
+        elif category == 'CAT2':
+            symbol = QgsFillSymbol.createSimple({'outline_color': 'orange', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            renderer.setSymbol(symbol)
+        elif category == 'CAT3':
+            symbol = QgsFillSymbol.createSimple({'outline_color': 'yellow', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            renderer.setSymbol(symbol)
+        elif category == 'CAT4':
+            symbol = QgsFillSymbol.createSimple({'outline_color': 'black', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            renderer.setSymbol(symbol)
+        elif category == 'BATS':
+            symbol = QgsFillSymbol.createSimple({'outline_color': 'black', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            renderer.setSymbol(symbol)
+        elif category == 'RNB':
+            symbol = QgsFillSymbol.createSimple({'outline_color': 'blue', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            renderer.setSymbol(symbol)
+
+        # Update the symbolgy on the layer tree (refresh)
+        iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
+
+        # Save the style file for future use in QGIS. Get the layer source and change the file extension.
+        outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.qml'
+        layer.saveNamedStyle(outputFile)
 
     def loadSetings(self):
         """Get the current db settings and load them into the form fields."""
@@ -660,6 +855,60 @@ class Aderyn:
         # Return the name of the shapefile.
         return fileName
 
+    def styleShapefile(self, layer, category, fileName):
+        """ Style the layer - and save the resulting QML file. """
+        renderer = layer.renderer()
+        if category == 'CAT1':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'red', 'size': '2', })
+            renderer.setSymbol(symbol)
+        elif category == 'CAT2':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'orange', 'size': '3', })
+            renderer.setSymbol(symbol)
+        elif category == 'CAT3':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'yellow', 'size': '4', })
+            renderer.setSymbol(symbol)
+        elif category == 'CAT4':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'star', 'color': 'black', 'size': '2', })
+            renderer.setSymbol(symbol)
+        elif category == 'BATS':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'triangle', 'color': 'black', 'size': '2', })
+            renderer.setSymbol(symbol)
+        elif category == 'RNB':
+            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'blue', 'size': '2', })
+            renderer.setSymbol(symbol)
+
+        # Update the symbolgy on the layer tree (refresh)
+        iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
+
+        #Add labels.
+        layer_settings = QgsPalLayerSettings()
+        layer_settings.fieldName = "grid_ref"
+        # layer_settings.fieldName = "concat(grid_ref, ' (', actual_nam, ')')"
+        layer_settings.isExpression = True
+        layer_settings.placement = QgsPalLayerSettings.AroundPoint
+
+        # layer_settings.OffsetType = QgsPalLayerSettings.AroundPoint
+        layer_settings.OffsetType = QgsPalLayerSettings.FromPoint
+        layer_settings.OffsetUnits = QgsUnitTypes.RenderUnit.RenderMillimeters
+        layer_settings.dist = 1
+        layer_settings.enabled = True
+
+        text_format = QgsTextFormat()
+        text_format.setFont(QFont("Arial", 10))
+        text_format.setSize(10)
+        layer_settings.setFormat(text_format)
+
+        labeling = QgsVectorLayerSimpleLabeling(layer_settings)
+        layer.setLabelsEnabled(True)
+        layer.setLabeling(labeling)
+        layer.triggerRepaint()
+
+        # Save the style file for future use in QGIS. Get the layer source and change the file extension.
+        #base = os.path.splitext(layer.source())[0]
+        #newFileQml = base + '.qml'
+        outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.qml'
+        layer.saveNamedStyle(outputFile)
+
     def createCsv(self, layer, category, fileName):
         """ Create CSV file from the layer. """
         #fileName = layer.source()
@@ -793,57 +1042,6 @@ class Aderyn:
         #Close.
         workbook.close()
 
-    def styleShapefile(self, layer, category, fileName):
-        """ Style the layer - and save the resulting QML file. """
-        renderer = layer.renderer()
-        if category == 'CAT1':
-            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'red', 'size': '2', })
-            renderer.setSymbol(symbol)
-        elif category == 'CAT2':
-            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'orange', 'size': '3', })
-            renderer.setSymbol(symbol)
-        elif category == 'CAT3':
-            symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'yellow', 'size': '4', })
-            renderer.setSymbol(symbol)
-        elif category == 'CAT4':
-            symbol = QgsMarkerSymbol.createSimple({'name': 'star', 'color': 'black', 'size': '2', })
-            renderer.setSymbol(symbol)
-        elif category == 'BATS':
-            symbol = QgsMarkerSymbol.createSimple({'name': 'triangle', 'color': 'black', 'size': '2', })
-            renderer.setSymbol(symbol)
-
-        # Update the symbolgy on the layer tree (refresh)
-        iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
-
-        #Add labels.
-        layer_settings = QgsPalLayerSettings()
-        layer_settings.fieldName = "grid_ref"
-        # layer_settings.fieldName = "concat(grid_ref, ' (', actual_nam, ')')"
-        layer_settings.isExpression = True
-        layer_settings.placement = QgsPalLayerSettings.AroundPoint
-
-        # layer_settings.OffsetType = QgsPalLayerSettings.AroundPoint
-        layer_settings.OffsetType = QgsPalLayerSettings.FromPoint
-        layer_settings.OffsetUnits = QgsUnitTypes.RenderUnit.RenderMillimeters
-        layer_settings.dist = 1
-        layer_settings.enabled = True
-
-        text_format = QgsTextFormat()
-        text_format.setFont(QFont("Arial", 10))
-        text_format.setSize(10)
-        layer_settings.setFormat(text_format)
-
-        labeling = QgsVectorLayerSimpleLabeling(layer_settings)
-        layer.setLabelsEnabled(True)
-        layer.setLabeling(labeling)
-        layer.triggerRepaint()
-
-        # Save the style file for future use in QGIS. Get the layer source and change the file extension.
-        #base = os.path.splitext(layer.source())[0]
-        #newFileQml = base + '.qml'
-        outputFile = os.path.join(self.SearchOutputFolder, fileName) + '.qml'
-        layer.saveNamedStyle(outputFile)
-
     def runSearch(self, category, buffer, fileName):
         """Run the search using the parameters suplied."""
         # QMessageBox.information(None, "Success!", str('You clicked ok - searching ' + category + '!'))
@@ -938,7 +1136,9 @@ class Aderyn:
             # Let's go!
             self.setVariables()
             validationLocation = self.validateLocation()
-            self.locateGridref()
+            # self.locateGridref()
+            # self.displayGridref()
+            self.clearGridref()
             validationVariables = self.validateVariables()
             validateCategories = self.validateCategories()
             if validationVariables == True and validationLocation == True and validateCategories == True:
@@ -952,20 +1152,67 @@ class Aderyn:
                 iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)
                 couter = 0
 
-                self.locateGridref()  # This will validate the location (again) and display it on the map.
+                #Create shapefile of search location.
+                self.locateGridref()  # This will validate the location (again) - but NOT display it.
+                QgsMessageLog.logMessage('Saving search location shapefile.', 'Aderyn')
+                fileNameShpSearchLocationRaw = self.createShapefileSearchLocation()
+
+                # Get the file name - for adding it to the interface.
+                fileNameShpSearchLocation = fileNameShpSearchLocationRaw + '.shp';
+                newFileSearchLocation = os.path.join(self.SearchOutputFolder, fileNameShpSearchLocation)
+
+                # Add the shapefile to QGIS'
+                # layer = iface.addVectorLayer(newFileBuffer, category + ' - ' + self.SearchName, "ogr")
+                layer = iface.addVectorLayer(newFileSearchLocation, 'Search Location', "ogr")
+
+                if not layer:
+                    self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileSearchLocation + ')!', level=Qgis.Warning)
+                    # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFileBuffer + ')!'))
+                else:
+                    # Style the layer.
+                    self.styleShapefileSearchLocation(layer, fileNameShpSearchLocationRaw)
 
                 #Add all the buffers.
                 for category in self.SearchCategories:
 
-                    QgsMessageLog.logMessage('Looping - display buffer ' + category[0] + ', buffer ' + str(category[1]) + ', colour ' + category[2], 'Aderyn')
-                    self.displayBuffer(str(category[1]), category[2])
+                    searchCategory = category[0]
+                    searchCategoryBuffer = category[1]
+                    searchCategoryColour = category[2]
+
+                    QgsMessageLog.logMessage('Looping - display buffer ' + searchCategory + ', buffer ' + str(searchCategoryBuffer) + ', colour ' + searchCategoryColour, 'Aderyn')
+                    fileNameShpBufferRaw = self.createShapefileBuffer(searchCategory, str(searchCategoryBuffer))
+
+                    # Get the file name - for adding it to the interface.
+                    fileNameShpBuffer = fileNameShpBufferRaw + '.shp';
+                    newFileBuffer = os.path.join(self.SearchOutputFolder, fileNameShpBuffer)
+
+                    # Add the shapefile to QGIS'
+                    # layer = iface.addVectorLayer(newFileBuffer, category + ' - ' + self.SearchName, "ogr")
+                    layer = iface.addVectorLayer(newFileBuffer, searchCategory + ' Buffer (' + str(searchCategoryBuffer) + 'm)', "ogr")
+
+                    if not layer:
+                        self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileBuffer + ')!', level=Qgis.Warning)
+                        # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFileBuffer + ')!'))
+                    else:
+                        # Style the layer.
+                        self.styleShapefileBuffer(layer, searchCategory, fileNameShpBufferRaw)
+
+                # Zoom the map to the largest buffer.
+                self.canvas.setExtent(self.gridSquareMaxBufferBoundingBox)
+                self.canvas.refresh()
+                # self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
 
                 # Run each search in turn.
                 for category in self.SearchCategories:
 
-                    QgsMessageLog.logMessage('Looping - search ' + category[0] + ', buffer ' + str(category[1]), 'Aderyn')
+                    searchCategory = category[0]
+                    searchCategoryBuffer = category[1]
+                    searchCategoryColour = category[2]
+                    searchCategoryFileName = category[3]
+
+                    QgsMessageLog.logMessage('Looping - search ' + searchCategory + ', buffer ' + str(searchCategoryBuffer), 'Aderyn')
                     #cat1 = ['CAT1', self.Cat1Buffer, 'red', fileName, 'Priority Species']
-                    self.runSearch(category[0], str(category[1]), category[3])
+                    self.runSearch(searchCategory, str(searchCategoryBuffer), searchCategoryFileName)
 
                     couter += 1 # Increment.
                     progress.setValue(couter)

@@ -4,6 +4,8 @@
     <list default="true" id="9af94698-e8ab-48b4-bdd7-148fa1eb374c" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/aderyn.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aderyn_dialog_base.ui" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn_dialog_base.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aderyn_query.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn_query.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -12,7 +14,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.33975902">
+    <splitter split-orientation="horizontal" split-proportion="0.5629061">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="false">
@@ -32,8 +34,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/aderyn_query.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state>
-                  <caret selection-end-line="7" selection-end-column="29" />
+                <state relative-caret-position="588">
+                  <caret line="133" column="36" selection-start-line="133" selection-start-column="36" selection-end-line="133" selection-end-column="36" />
                 </state>
               </provider>
             </entry>
@@ -50,10 +52,34 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/aderyn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="149">
-                  <caret line="682" column="25" selection-start-line="682" selection-start-column="25" selection-end-line="682" selection-end-column="25" />
+                <state relative-caret-position="640">
+                  <caret line="876" column="83" selection-start-line="876" selection-start-column="83" selection-end-line="876" selection-end-column="83" />
                   <folding>
                     <element signature="e#1262#1351#0" expanded="true" />
+                    <element signature="e#8732#9811#0" />
+                    <element signature="e#9849#11676#0" />
+                    <element signature="e#11719#13949#0" />
+                    <element signature="e#13993#15826#0" />
+                    <element signature="e#15868#16868#0" />
+                    <element signature="e#16907#18978#0" />
+                    <element signature="e#19019#21324#0" />
+                    <element signature="e#21362#21736#0" />
+                    <element signature="e#23585#26132#0" />
+                    <element signature="e#25950#26580#0" />
+                    <element signature="e#26667#29687#0" />
+                    <element signature="e#25750#28092#0" />
+                    <element signature="e#23108#23356#0" />
+                    <element signature="e#23394#24039#0" />
+                    <element signature="e#24087#26005#0" />
+                    <element signature="e#26043#26260#0" />
+                    <element signature="e#26311#26409#0" />
+                    <element signature="e#26485#30267#0" />
+                    <element signature="e#30329#31194#0" />
+                    <element signature="e#31230#37297#0" />
+                    <element signature="e#39769#43914#0" />
+                    <element signature="e#43946#44265#0" />
+                    <element signature="e#52376#52740#0" />
+                    <element signature="e#47217#48824#0" />
                   </folding>
                 </state>
               </provider>
@@ -66,10 +92,20 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/aderyn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="522">
-                  <caret line="585" selection-start-line="585" selection-end-line="585" />
+                <state relative-caret-position="926">
+                  <caret line="873" column="54" selection-start-line="873" selection-start-column="54" selection-end-line="873" selection-end-column="54" />
                   <folding>
                     <element signature="e#1262#1351#0" expanded="true" />
+                    <element signature="e#23108#23356#0" />
+                    <element signature="e#23394#24039#0" />
+                    <element signature="e#24087#26005#0" />
+                    <element signature="e#26043#26260#0" />
+                    <element signature="e#26311#26409#0" />
+                    <element signature="e#30329#31194#0" />
+                    <element signature="e#31230#37297#0" />
+                    <element signature="e#39769#43914#0" />
+                    <element signature="e#43946#44265#0" />
+                    <element signature="e#47217#48824#0" />
                   </folding>
                 </state>
               </provider>
@@ -99,6 +135,7 @@
       <find>invalid</find>
       <find>validation faile</find>
       <find>sensitive</find>
+      <find>search_area</find>
     </findStrings>
     <dirStrings>
       <dir>C:\QGIS Plugins\aderyn</dir>
@@ -117,18 +154,18 @@
         <option value="$PROJECT_DIR$/osgr.py" />
         <option value="$PROJECT_DIR$/envmanager.py" />
         <option value="$PROJECT_DIR$/aderyn_query_test.py" />
-        <option value="$PROJECT_DIR$/aderyn_query.py" />
         <option value="$PROJECT_DIR$/readme.md" />
         <option value="$PROJECT_DIR$/metadata.txt" />
         <option value="$PROJECT_DIR$/get_pip.py" />
         <option value="$PROJECT_DIR$/pb_tool.cfg" />
         <option value="$PROJECT_DIR$/aderyn_spreadsheet.py" />
+        <option value="$PROJECT_DIR$/aderyn_query.py" />
         <option value="$PROJECT_DIR$/aderyn.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="5" />
+  <component name="ProjectFrameBounds" extendedState="1">
+    <option name="x" value="25" />
     <option name="y" value="5" />
     <option name="width" value="1919" />
     <option name="height" value="1038" />
@@ -190,9 +227,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="5" y="5" width="1919" height="1038" extended-state="0" />
+    <frame x="25" y="5" width="1919" height="1038" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.117490694" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.099946834" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -216,8 +254,18 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>967</line>
-          <option name="timeStamp" value="17" />
+          <line>1214</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/aderyn.py</url>
+          <line>1127</line>
+          <option name="timeStamp" value="25" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/aderyn.py</url>
+          <line>602</line>
+          <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -335,8 +383,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn_query.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="7" selection-end-column="29" />
+        <state relative-caret-position="588">
+          <caret line="133" column="36" selection-start-line="133" selection-start-column="36" selection-end-line="133" selection-end-column="36" />
         </state>
       </provider>
     </entry>
@@ -349,10 +397,34 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="522">
-          <caret line="585" selection-start-line="585" selection-end-line="585" />
+        <state relative-caret-position="640">
+          <caret line="876" column="83" selection-start-line="876" selection-start-column="83" selection-end-line="876" selection-end-column="83" />
           <folding>
             <element signature="e#1262#1351#0" expanded="true" />
+            <element signature="e#8732#9811#0" />
+            <element signature="e#9849#11676#0" />
+            <element signature="e#11719#13949#0" />
+            <element signature="e#13993#15826#0" />
+            <element signature="e#15868#16868#0" />
+            <element signature="e#16907#18978#0" />
+            <element signature="e#19019#21324#0" />
+            <element signature="e#21362#21736#0" />
+            <element signature="e#23585#26132#0" />
+            <element signature="e#25950#26580#0" />
+            <element signature="e#26667#29687#0" />
+            <element signature="e#25750#28092#0" />
+            <element signature="e#23108#23356#0" />
+            <element signature="e#23394#24039#0" />
+            <element signature="e#24087#26005#0" />
+            <element signature="e#26043#26260#0" />
+            <element signature="e#26311#26409#0" />
+            <element signature="e#26485#30267#0" />
+            <element signature="e#30329#31194#0" />
+            <element signature="e#31230#37297#0" />
+            <element signature="e#39769#43914#0" />
+            <element signature="e#43946#44265#0" />
+            <element signature="e#52376#52740#0" />
+            <element signature="e#47217#48824#0" />
           </folding>
         </state>
       </provider>

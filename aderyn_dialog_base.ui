@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>405</width>
-    <height>369</height>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>320</y>
+     <y>360</y>
      <width>171</width>
      <height>32</height>
     </rect>
@@ -56,7 +56,7 @@
    <property name="geometry">
     <rect>
      <x>54</x>
-     <y>330</y>
+     <y>360</y>
      <width>16</width>
      <height>16</height>
     </rect>
@@ -69,7 +69,7 @@
    <property name="geometry">
     <rect>
      <x>22</x>
-     <y>330</y>
+     <y>360</y>
      <width>27</width>
      <height>16</height>
     </rect>
@@ -488,10 +488,76 @@ Each selected category needs to have a buffer set in meters.</string>
     <string>Vector Layer</string>
    </property>
   </widget>
+  <widget class="QLabel" name="label_rnb">
+   <property name="geometry">
+    <rect>
+     <x>21</x>
+     <y>330</y>
+     <width>31</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RNB</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="cb_rnb">
+   <property name="geometry">
+    <rect>
+     <x>54</x>
+     <y>330</y>
+     <width>21</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_rnb_buffer">
+   <property name="geometry">
+    <rect>
+     <x>72</x>
+     <y>330</y>
+     <width>51</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Buffer (m)</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="sb_rnb_buffer">
+   <property name="geometry">
+    <rect>
+     <x>127</x>
+     <y>330</y>
+     <width>55</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <number>10000</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>332</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(Roof nesting birds)</string>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>le_location</tabstop>
   <tabstop>pb_locate</tabstop>
+  <tabstop>cb_vector_layer</tabstop>
   <tabstop>le_search_name</tabstop>
   <tabstop>le_ouput_folder</tabstop>
   <tabstop>tb_output_folder</tabstop>
@@ -505,6 +571,8 @@ Each selected category needs to have a buffer set in meters.</string>
   <tabstop>sb_cat4_buffer</tabstop>
   <tabstop>cb_bats</tabstop>
   <tabstop>sb_bats_buffer</tabstop>
+  <tabstop>cb_rnb</tabstop>
+  <tabstop>sb_rnb_buffer</tabstop>
   <tabstop>cb_csv</tabstop>
   <tabstop>pb_test_database</tabstop>
   <tabstop>pb_settings</tabstop>
