@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/aderyn.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/aderyn_dialog_base.ui" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn_dialog_base.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aderyn_query.py" beforeDir="false" afterPath="$PROJECT_DIR$/aderyn_query.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -52,10 +51,11 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/aderyn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="640">
-                  <caret line="876" column="83" selection-start-line="876" selection-start-column="83" selection-end-line="876" selection-end-column="83" />
+                <state relative-caret-position="612">
+                  <caret line="339" column="30" lean-forward="true" selection-start-line="339" selection-start-column="30" selection-end-line="339" selection-end-column="30" />
                   <folding>
                     <element signature="e#1262#1351#0" expanded="true" />
+                    <element signature="e#2721#5879#0" />
                     <element signature="e#8732#9811#0" />
                     <element signature="e#9849#11676#0" />
                     <element signature="e#11719#13949#0" />
@@ -74,6 +74,7 @@
                     <element signature="e#26043#26260#0" />
                     <element signature="e#26311#26409#0" />
                     <element signature="e#26485#30267#0" />
+                    <element signature="e#32961#35303#0" />
                     <element signature="e#30329#31194#0" />
                     <element signature="e#31230#37297#0" />
                     <element signature="e#39769#43914#0" />
@@ -93,7 +94,7 @@
             <entry file="file://$PROJECT_DIR$/aderyn.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="926">
-                  <caret line="873" column="54" selection-start-line="873" selection-start-column="54" selection-end-line="873" selection-end-column="54" />
+                  <caret line="897" column="54" selection-start-line="897" selection-start-column="54" selection-end-line="897" selection-end-column="54" />
                   <folding>
                     <element signature="e#1262#1351#0" expanded="true" />
                     <element signature="e#23108#23356#0" />
@@ -164,7 +165,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds">
     <option name="x" value="25" />
     <option name="y" value="5" />
     <option name="width" value="1919" />
@@ -228,7 +229,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="25" y="5" width="1919" height="1038" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.099946834" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -254,17 +254,17 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>1214</line>
+          <line>1239</line>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>1127</line>
+          <line>1151</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>602</line>
+          <line>626</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
@@ -397,10 +397,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="640">
-          <caret line="876" column="83" selection-start-line="876" selection-start-column="83" selection-end-line="876" selection-end-column="83" />
+        <state relative-caret-position="612">
+          <caret line="339" column="30" lean-forward="true" selection-start-line="339" selection-start-column="30" selection-end-line="339" selection-end-column="30" />
           <folding>
             <element signature="e#1262#1351#0" expanded="true" />
+            <element signature="e#2721#5879#0" />
             <element signature="e#8732#9811#0" />
             <element signature="e#9849#11676#0" />
             <element signature="e#11719#13949#0" />
@@ -419,6 +420,7 @@
             <element signature="e#26043#26260#0" />
             <element signature="e#26311#26409#0" />
             <element signature="e#26485#30267#0" />
+            <element signature="e#32961#35303#0" />
             <element signature="e#30329#31194#0" />
             <element signature="e#31230#37297#0" />
             <element signature="e#39769#43914#0" />

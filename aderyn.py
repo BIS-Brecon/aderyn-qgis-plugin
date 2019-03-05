@@ -269,6 +269,9 @@ class Aderyn:
             add_to_toolbar=False,
             parent=self.iface.mainWindow())
 
+        # Add vector layer.
+        self.dlg.tb_vector_layer.clicked.connect(self.addVector)
+
         # Database tester.
         self.dlg.pb_test_database.clicked.connect(self.testDatabaseConnection)
 
@@ -314,6 +317,27 @@ class Aderyn:
         #     'Bats: ' + str(self.BatsSelect) + ' (' + str(self.BatsBuffer) + ')' + '\n'
         #     'CSV: ' + str(self.CsvSelect) + '\n'
         #     ))
+
+    def loadVectors(self):
+        """ Load vectors from QGIS table of contents. """
+        self.dlg.cb_vector_layer.clear()
+        layers = [layer for layer in QgsProject.instance().mapLayers().values()]
+        vector_layers = []
+        for layer in layers:
+            if layer.type() == QgsMapLayer.VectorLayer:
+                vector_layers.append(layer.name())
+        if len(vector_layers) > 0:
+            # Add select to the start of the list.
+            # vector_layers.append('Select...')
+            vector_layers.insert(0, 'Select...')
+        self.dlg.cb_vector_layer.addItems(vector_layers)
+
+    def addVector(self):
+        """ Open and add a vector layer from file dialogue. """
+        inFile = str(QFileDialog.getOpenFileName(caption="Open Shapefile", filter="Shapefiles (*.shp)")[0])
+        if inFile is not None:
+            self.iface.addVectorLayer(inFile, str.split(os.path.basename(inFile), ".")[0], "ogr")
+            self.loadVectors()
 
     def validateVariables(self):
         """ Validate that the categories - if a cat is selected then there should be a buffer. """
@@ -1129,6 +1153,7 @@ class Aderyn:
         """Run method that performs all the real work"""
         # show the dialog
         self.dlg.show()
+        self.loadVectors() # Load any vector layers.
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
