@@ -347,6 +347,7 @@ class Aderyn:
             if lyr.name() == layername:
                 layer = lyr
                 break
+        # feature_count = layer.featureCount()
         return layer
 
     def validateVariables(self):

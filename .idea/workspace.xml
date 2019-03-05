@@ -49,8 +49,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/aderyn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="663">
-                  <caret line="342" column="40" lean-forward="true" selection-start-line="342" selection-start-column="40" selection-end-line="342" selection-end-column="40" />
+                <state relative-caret-position="799">
+                  <caret line="350" column="20" lean-forward="true" selection-start-line="350" selection-start-column="20" selection-end-line="350" selection-end-column="20" />
                   <folding>
                     <element signature="e#1262#1351#0" expanded="true" />
                   </folding>
@@ -66,7 +66,7 @@
             <entry file="file://$PROJECT_DIR$/aderyn.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="820">
-                  <caret line="907" column="54" selection-start-line="907" selection-start-column="54" selection-end-line="907" selection-end-column="54" />
+                  <caret line="908" column="54" selection-start-line="908" selection-start-column="54" selection-end-line="908" selection-end-column="54" />
                   <folding>
                     <element signature="e#1262#1351#0" expanded="true" />
                   </folding>
@@ -127,11 +127,11 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="25" />
-    <option name="y" value="5" />
-    <option name="width" value="1919" />
-    <option name="height" value="1038" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1936" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -190,10 +190,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="25" y="5" width="1919" height="1038" extended-state="0" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.099946834" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.09905163" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -217,17 +217,17 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>1249</line>
+          <line>1250</line>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>1161</line>
+          <line>1162</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/aderyn.py</url>
-          <line>636</line>
+          <line>637</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
@@ -360,8 +360,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/aderyn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="663">
-          <caret line="342" column="40" lean-forward="true" selection-start-line="342" selection-start-column="40" selection-end-line="342" selection-end-column="40" />
+        <state relative-caret-position="799">
+          <caret line="350" column="20" lean-forward="true" selection-start-line="350" selection-start-column="20" selection-end-line="350" selection-end-column="20" />
           <folding>
             <element signature="e#1262#1351#0" expanded="true" />
           </folding>
