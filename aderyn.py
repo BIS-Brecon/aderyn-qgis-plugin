@@ -339,6 +339,16 @@ class Aderyn:
             self.iface.addVectorLayer(inFile, str.split(os.path.basename(inFile), ".")[0], "ogr")
             self.loadVectors()
 
+    def getVectorLayer(self):
+        """ Get vector layer specified in combo box. """
+        layer = None
+        layername = self.dlg.cb_vector_layer.currentText()
+        for lyr in QgsProject.instance().mapLayers().values():
+            if lyr.name() == layername:
+                layer = lyr
+                break
+        return layer
+
     def validateVariables(self):
         """ Validate that the categories - if a cat is selected then there should be a buffer. """
         if len(self.SearchName) < 2:
