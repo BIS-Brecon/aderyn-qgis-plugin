@@ -135,6 +135,12 @@ class Aderyn:
         self.transformCrs = QgsCoordinateTransform(self.canvas.mapSettings().destinationCrs(),
                                                    QgsCoordinateReferenceSystem("EPSG:27700"), QgsProject.instance())
 
+        # Search location (gridref) and WKT (used for gridref and vector).
+        self.SearchLocation = NULL
+        self.SearchWKT = NULL
+        self.SearchWKTCentre = NULL
+        self.SearchGeometry = NULL # QgsGeometry instance.
+
         # Store any gridsquare.
         self.gridSquareCentre = NULL  # QgsPointXY
         self.gridSquareRectangle = NULL  # QgsRectangle
@@ -142,7 +148,13 @@ class Aderyn:
         self.gridSquareMaxBuffer = 0  # QgsRubberBand - store the largest buffer.
         self.gridSquareMaxBufferBoundingBox = NULL
 
-        self.SearchLocation = NULL
+        # Vector.
+        self.SearchVectorName = NULL
+        self.SearchVectorLayer = NULL
+        self.SearchVectorLayerFeatureCount = NULL
+        self.SearchVectorLayerFeatureCountSelected = NULL # selectedFeatureCount()
+        self.SearchVectorFeature = NULL
+
         self.SearchName = NULL
         self.SearchOutputFolder = NULL
         self.SearchCategories = []
@@ -288,6 +300,8 @@ class Aderyn:
     def setVariables(self):
         """Get all the variables from the GUI and load them into the class."""
         self.SearchLocation = self.dlg.le_location.text()
+        if self.dlg.cb_vector_layer.currentText() != 'Select...':
+            self.getVectorLayer() # Get the vector layer and the feature count.
         self.SearchName = self.dlg.le_search_name.text()
         self.SearchOutputFolder = self.dlg.le_ouput_folder.text()
         self.Cat1Select = True if self.dlg.cb_cat1.isChecked() == True else False
@@ -342,13 +356,83 @@ class Aderyn:
     def getVectorLayer(self):
         """ Get vector layer specified in combo box. """
         layer = None
-        layername = self.dlg.cb_vector_layer.currentText()
-        for lyr in QgsProject.instance().mapLayers().values():
-            if lyr.name() == layername:
-                layer = lyr
+        self.SearchVectorName = self.dlg.cb_vector_layer.currentText()
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.name() == self.SearchVectorName:
+                self.SearchVectorLayer = layer
+                self.SearchVectorLayerFeatureCount = layer.featureCount()
+                self.SearchVectorLayerFeatureCountSelected = layer.selectedFeatureCount()
                 break
-        # feature_count = layer.featureCount()
-        return layer
+
+        # What have we got?
+        QgsMessageLog.logMessage('Layer feature count: ' + str(self.SearchVectorLayerFeatureCount) + ', selected feature count: ' + str(self.SearchVectorLayerFeatureCountSelected) + '.', 'Aderyn')
+
+        # Get the feature (self.SearchVectorFeature)
+        if self.SearchVectorLayerFeatureCount == 1:
+            QgsMessageLog.logMessage('Using single feature from vector layer.', 'Aderyn')
+            features = layer.getFeatures()
+        elif self.SearchVectorLayerFeatureCountSelected == 1:
+            QgsMessageLog.logMessage('Using selected feature from vector layer.', 'Aderyn')
+            features = layer.getSelectedFeatures()
+
+        # Loop through - should only be 1! So no matter to loop.
+        geom = NULL
+        type = NULL
+        wkt = NULL
+        wkt_centre = NULL
+        feature_length = 0
+        feature_area = 0
+        for feature in features:
+            self.SearchVectorFeature = feature
+            geom = feature.geometry()
+            centroid = geom.centroid()
+            geomSingleType = QgsWkbTypes.isSingleType(geom.wkbType())
+            if geom.type() == QgsWkbTypes.PointGeometry:
+                # the geometry type can be of single or multi type
+                if geomSingleType:
+                    x = geom.asPoint()
+                    wkt = geom.asWkt()
+                    wkt_centre = wkt # Point - centre is the same.
+                    type = 'Point'
+                else:
+                    x = geom.asMultiPoint()
+                    wkt = geom.asWkt()
+                    wkt_centre = wkt  # Point - centre is the same.
+                    type = 'MultiPoint'
+            elif geom.type() == QgsWkbTypes.LineGeometry:
+                if geomSingleType:
+                    x = geom.asPolyline()
+                    wkt = geom.asWkt()
+                    wkt_centre = centroid.asWkt()
+                    type = 'Polyline'
+                    feature_length = geom.length()
+                else:
+                    x = geom.asMultiPolyline()
+                    wkt = geom.asWkt()
+                    wkt_centre = centroid.asWkt()
+                    type = 'MultiPolyline'
+                    feature_length = geom.length()
+            elif geom.type() == QgsWkbTypes.PolygonGeometry:
+                if geomSingleType:
+                    x = geom.asPolygon()
+                    wkt = geom.asWkt()
+                    wkt_centre = centroid.asWkt()
+                    type = 'Polygon'
+                    feature_area = geom.area()
+                else:
+                    x = geom.asMultiPolygon()
+                    wkt = geom.asWkt()
+                    wkt_centre = centroid.asWkt()
+                    type = 'MultiPolygon'
+                    feature_area = geom.area()
+            else:
+                type = 'Unknown'
+
+        # What did we get?
+        self.SearchGeometry = geom
+        self.SearchWKT = wkt
+        self.SearchWKTCentre = wkt_centre
+        QgsMessageLog.logMessage('Geom type: ' + type + ', wkt: ' + wkt + ', wkt centre: ' + wkt_centre + ', length: ' + str(feature_length) + ', area: ' + str(feature_area) + '', 'Aderyn')
 
     def validateVariables(self):
         """ Validate that the categories - if a cat is selected then there should be a buffer. """
@@ -417,23 +501,26 @@ class Aderyn:
             rnb = ['RNB', self.RnbBuffer, 'blue', fileName, 'Roof Nesting Birds']
             self.SearchCategories.append(rnb)
 
-        if len(self.SearchCategories) > 0:
-            return True
-        else:
+        if len(self.SearchCategories) == 0:
             self.iface.messageBar().pushMessage("Warning", "No categories selected", level=Qgis.Warning)
-            self.run()
+            # self.run()
+        else:
+            return True
 
     def validateLocation(self):
-        """Validate that the search location is a valid grid ref."""
-        if len(self.SearchLocation) % 2 != 0:
+        """Check vector layer, or if blank, validate that the search location (gridref) is a valid grid ref."""
+        if self.SearchVectorName and self.SearchVectorLayer and self.SearchWKT == NULL:
+            # We have a vector - but the feature count is not 1.
+            self.iface.messageBar().pushMessage("Warning", "Error getting feature from vector layer. Vector layer has more than one (selected) feature?", level=Qgis.Warning)
+        elif self.SearchLocation and len(self.SearchLocation) % 2 != 0:
             # Fine - number is even.
             # QMessageBox.information(None, "Error!", str('Invalid grid reference (not even)!'))
             self.iface.messageBar().pushMessage("Warning", "Invalid grid reference (not even)!", level=Qgis.Warning)
-        elif len(self.SearchLocation) < 4:
+        elif self.SearchLocation and len(self.SearchLocation) < 4:
             # Min is 2 digits plus prefix.
             # QMessageBox.information(None, "Error!", str('Invalid grid reference (too short)!'))
             self.iface.messageBar().pushMessage("Warning", "Invalid grid reference (too short)!", level=Qgis.Warning)
-        elif len(self.SearchLocation) > 12:
+        elif self.SearchLocation and len(self.SearchLocation) > 12:
             # Max is 10 nubmers plus prefix.
             # QMessageBox.information(None, "Error!", str('Invalid grid reference (too long)!'))
             self.iface.messageBar().pushMessage("Warning", "Invalid grid reference (too long)!", level=Qgis.Warning)
@@ -443,14 +530,15 @@ class Aderyn:
     def locateGridref(self):
         """Locate the gridref the user has specified. Pan and zoom the map. """
         # Get the variables.
-        self.setVariables()
-        validation = self.validateLocation()
-        if validation == True:
+        self.SearchLocation = self.dlg.le_location.text()
+        if self.SearchLocation:
+
             res = self.osgr.enFromGR(self.SearchLocation)  # returns easting, northing, precision, retCheck[1]
 
             if res[0] == 0:
-                self.iface.messageBar().pushMessage("Warning", res[3],
-                                                    level=Qgis.Warning)  # Show verification warning if conversion has failed.
+                # self.iface.messageBar().pushMessage("Warning", res[3], level=Qgis.Warning)  # Show verification warning if conversion has failed.
+                self.iface.messageBar().pushMessage("Warning", "Grid Ref. Validation failed! " + res[3], level=Qgis.Warning)
+                QMessageBox.information(None, "Error!", str("Grid Ref. Validation failed!"))
             else:
                 QgsMessageLog.logMessage('GR converted successfully.', 'Aderyn')
                 QgsMessageLog.logMessage('Res 0: ' + str(res[0]), 'Aderyn')  # Easting
@@ -464,6 +552,7 @@ class Aderyn:
                 x1 = (res[0] + precision / 2)
                 y0 = (res[1] - precision / 2)
                 y1 = (res[1] + precision / 2)
+                QgsMessageLog.logMessage('Grid ref located: ' + str(x0) + ', ' + str(x1) + ', ' + str(y0) + ', ' + str(y1) + '.', 'Aderyn')
 
                 centre = QgsPointXY(res[0], res[1])
                 ll = QgsPointXY(x0, y0)
@@ -475,62 +564,89 @@ class Aderyn:
                 self.gridSquareCentre = centre
                 self.gridSquareRectangle = rect
 
+                # Create and store the geometry.
+                geometry = QgsGeometry()
+                geometry = geometry.fromRect(rect)
+                self.SearchGeometry = geometry
+
+                # Build the centre WKT. self.gridSquareCentre = centre ~ centre = QgsPointXY(res[0], res[1])
+                wkt = 'POINT(' \
+                             + str(centre.x()) + ' ' + str(centre.y()) + ')'
+                self.SearchWKT = wkt
+
+                # Build the WKT.
+                wkt_centre = 'POLYGON((' \
+                      + str(rect.xMinimum()) + ' ' + str(rect.yMinimum()) + ',' \
+                      + str(rect.xMinimum()) + ' ' + str(rect.yMaximum()) + ',' \
+                      + str(rect.xMaximum()) + ' ' + str(rect.yMaximum()) + ',' \
+                      + str(rect.xMaximum()) + ' ' + str(rect.yMinimum()) + ',' \
+                      + str(rect.xMinimum()) + ' ' + str(rect.yMinimum()) + '))'
+                self.SearchWKTCentre = wkt_centre
+
+                QgsMessageLog.logMessage('WKT: ' + wkt + '.', 'Aderyn')
+                QgsMessageLog.logMessage('WKT Centre: ' + wkt_centre + '.', 'Aderyn')
+
                 # Display the gridref.
                 # self.displayGridref()
 
         else:
-            self.iface.messageBar().pushMessage("Warning", "Grid Ref. Validation failed!", level=Qgis.Warning)
-            # QMessageBox.information(None, "Error!", str("Grid Ref. Validation failed!"))
+            QgsMessageLog.logMessage('No grid ref specified.', 'Aderyn')
 
     def displayGridref(self):
 
         # Ensure the grid ref has been located and saved.
         self.locateGridref()
 
-        #Get the grid ref.
-        rect = self.gridSquareRectangle
-        geometry = QgsGeometry()
-        geometry = geometry.fromRect(rect)
+        # Do we have valid rect from locateGridref?
+        if self.gridSquareRectangle:
 
-        # Get existing RubberBands
-        rbs = [i for i in iface.mapCanvas().scene().items()
-               if issubclass(type(i), qgis._gui.QgsRubberBand)]
+            #Get the grid ref.
+            rect = self.gridSquareRectangle
+            geometry = QgsGeometry()
+            geometry = geometry.fromRect(rect)
 
-        # Remove existing RubberBands
-        for rb in rbs:
-            if rb in iface.mapCanvas().scene().items():
-                iface.mapCanvas().scene().removeItem(rb)
+            # Get existing RubberBands
+            rbs = [i for i in iface.mapCanvas().scene().items()
+                   if issubclass(type(i), qgis._gui.QgsRubberBand)]
 
-        # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
-        self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
-        if self.canvasCrs == self.osgbCrs:
+            # Remove existing RubberBands
+            for rb in rbs:
+                if rb in iface.mapCanvas().scene().items():
+                    iface.mapCanvas().scene().removeItem(rb)
 
-            r = QgsRubberBand(self.canvas, False)  # False = a polyline
-            color = QColor(255, 0, 255)
-            transparent = QColor(0, 0, 0, 0)
-            # points = [QgsPoint(rect.xMinimum(), rect.yMinimum()),
-            #           QgsPoint(rect.xMinimum(), rect.yMaximum()),
-            #           QgsPoint(rect.xMaximum(), rect.yMaximum()),
-            #           QgsPoint(rect.xMaximum(), rect.yMinimum()),
-            #           QgsPoint(rect.xMinimum(), rect.yMinimum())]
-            # r.setToGeometry(QgsGeometry.fromPolyline(points), None)
-            r.setToGeometry(geometry, None)
-            r.setColor(color)
-            r.setFillColor(transparent)
-            r.setWidth(2)
+            # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
+            self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
+            if self.canvasCrs == self.osgbCrs:
 
-            # Store the Qgs RubberBand.
-            self.gridSquareRubberBand = r
+                r = QgsRubberBand(self.canvas, False)  # False = a polyline
+                color = QColor(255, 0, 255)
+                transparent = QColor(0, 0, 0, 0)
+                # points = [QgsPoint(rect.xMinimum(), rect.yMinimum()),
+                #           QgsPoint(rect.xMinimum(), rect.yMaximum()),
+                #           QgsPoint(rect.xMaximum(), rect.yMaximum()),
+                #           QgsPoint(rect.xMaximum(), rect.yMinimum()),
+                #           QgsPoint(rect.xMinimum(), rect.yMinimum())]
+                # r.setToGeometry(QgsGeometry.fromPolyline(points), None)
+                r.setToGeometry(geometry, None)
+                r.setColor(color)
+                r.setFillColor(transparent)
+                r.setWidth(2)
 
-            #Pan and zoom to the gridref.
-            # box = rect.boundingBoxOfSelected()
-            self.canvas.setExtent(rect)
-            self.canvas.refresh()
-            self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
+                # Store the Qgs RubberBand.
+                self.gridSquareRubberBand = r
+
+                #Pan and zoom to the gridref.
+                # box = rect.boundingBoxOfSelected()
+                self.canvas.setExtent(rect)
+                self.canvas.refresh()
+                self.canvas.zoomOut()  # Zoom out 1 level - to give a bit of context.
+
+            else:
+                self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
+                # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
 
         else:
-            self.iface.messageBar().pushMessage("Warning", "Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ").", level=Qgis.Warning)
-            # QMessageBox.information(None, "Error!", str("Incorrect map CRS (" + str(self.canvasCrs) + ")! Map view must be in OSGB36 (" + self.osgbCrs + ")."))
+            QgsMessageLog.logMessage('No rectangle returned by locate grid ref.', 'Aderyn')
 
     def clearGridref(self):
         """ Clear all rubber bands. """
@@ -654,9 +770,10 @@ class Aderyn:
         buffer = int(buffer)
 
         # Buffer the rectangle. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
-        rect = self.gridSquareRectangle
-        geometry = QgsGeometry()
-        geometry = geometry.fromRect(rect)
+        # rect = self.gridSquareRectangle
+        # geometry = QgsGeometry()
+        # geometry = geometry.fromRect(rect)
+        geometry = self.SearchGeometry # Just get the geometry object (QgsGeometry()) stored by the locate gridref or getVectorLayers function.
         buffered = geometry.buffer(buffer, 10)
 
         # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
@@ -665,7 +782,7 @@ class Aderyn:
 
             # Create a writer.
             writerCrs = QgsCoordinateReferenceSystem(27700)
-            shapefileType = QgsWkbTypes.Polygon  # Point - could be polygon.
+            shapefileType = QgsWkbTypes.Polygon # Buffer is always a polygon.
             fileName = category.lower() + '_buffer_' + str(buffer)
             outputFile = os.path.join(self.SearchOutputFolder, fileName)
             QgsMessageLog.logMessage('Buffer ' + category + ' output file: ' + outputFile + '.', 'Aderyn')
@@ -1092,23 +1209,10 @@ class Aderyn:
                 QgsMessageLog.logMessage('Database opened successfully.', 'Aderyn')
                 QgsMessageLog.logMessage('Searching ' + category + ', buffer ' + buffer, 'Aderyn')
 
-                # Build the centre WKT. self.gridSquareCentre = centre ~ centre = QgsPointXY(res[0], res[1])
-                wkt_centre = 'POINT(' \
-                             + str(self.gridSquareCentre.x()) + ' ' + str(self.gridSquareCentre.y()) + ')'
-
-                # Build the WKT.
-                wkt = 'POLYGON((' \
-                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
-                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMaximum()) + ',' \
-                      + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMaximum()) + ',' \
-                      + str(self.gridSquareRectangle.xMaximum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + ',' \
-                      + str(self.gridSquareRectangle.xMinimum()) + ' ' + str(self.gridSquareRectangle.yMinimum()) + '))'
-                QgsMessageLog.logMessage('WKT: ' + wkt + '.', 'Aderyn')
-                QgsMessageLog.logMessage('WKT Centre: ' + wkt_centre + '.', 'Aderyn')
-                # Build the query string.
+                # Run the search.
                 # AderynQueryObj = aderyn_query.AderynQuery()
                 AderynQueryObj = AderynQuery()
-                queryString = AderynQueryObj.sqlQuery(category, wkt, wkt_centre, buffer)
+                queryString = AderynQueryObj.sqlQuery(category, self.SearchWKT, self.SearchWKTCentre, buffer)
                 # QgsMessageLog.logMessage('SQL: ' + queryString + '', 'Aderyn')
                 query = db.exec_(queryString)
                 QgsMessageLog.logMessage(category + ' query returned ' + str(query.size()) + ' rows.', 'Aderyn')
@@ -1171,13 +1275,12 @@ class Aderyn:
         if result:
             # Let's go!
             self.setVariables()
-            validationLocation = self.validateLocation()
-            # self.locateGridref()
-            # self.displayGridref()
-            self.clearGridref()
-            validationVariables = self.validateVariables()
+            self.clearGridref() # Clear any grid refs elastic bands.
+            self.displayGridref() # If there is a grid ref, display it.
+            validateLocation = self.validateLocation()
+            validateVariables = self.validateVariables()
             validateCategories = self.validateCategories()
-            if validationVariables == True and validationLocation == True and validateCategories == True:
+            if validateVariables == True and validateLocation == True and validateCategories == True:
 
                 #Set up progress bar. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/communicating.html - showing progress??
                 progressMessageBar = iface.messageBar().createMessage("Running search...")
@@ -1189,24 +1292,23 @@ class Aderyn:
                 couter = 0
 
                 #Create shapefile of search location.
-                self.locateGridref()  # This will validate the location (again) - but NOT display it.
+                # self.locateGridref()  # This will validate the location (again) - but NOT display it.
                 QgsMessageLog.logMessage('Saving search location shapefile.', 'Aderyn')
-                fileNameShpSearchLocationRaw = self.createShapefileSearchLocation()
+                # fileNameShpSearchLocationRaw = self.createShapefileSearchLocation()
 
                 # Get the file name - for adding it to the interface.
-                fileNameShpSearchLocation = fileNameShpSearchLocationRaw + '.shp';
-                newFileSearchLocation = os.path.join(self.SearchOutputFolder, fileNameShpSearchLocation)
+                # fileNameShpSearchLocation = fileNameShpSearchLocationRaw + '.shp';
+                # newFileSearchLocation = os.path.join(self.SearchOutputFolder, fileNameShpSearchLocation)
 
                 # Add the shapefile to QGIS'
                 # layer = iface.addVectorLayer(newFileBuffer, category + ' - ' + self.SearchName, "ogr")
-                layer = iface.addVectorLayer(newFileSearchLocation, 'Search Location', "ogr")
+                # layer = iface.addVectorLayer(newFileSearchLocation, 'Search Location', "ogr")
 
-                if not layer:
-                    self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileSearchLocation + ')!', level=Qgis.Warning)
-                    # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFileBuffer + ')!'))
-                else:
-                    # Style the layer.
-                    self.styleShapefileSearchLocation(layer, fileNameShpSearchLocationRaw)
+                # Style the layer.
+                # if not layer:
+                #     self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileSearchLocation + ')!', level=Qgis.Warning)
+                # else:
+                #     self.styleShapefileSearchLocation(layer, fileNameShpSearchLocationRaw)
 
                 #Add all the buffers.
                 for category in self.SearchCategories:
@@ -1223,14 +1325,12 @@ class Aderyn:
                     newFileBuffer = os.path.join(self.SearchOutputFolder, fileNameShpBuffer)
 
                     # Add the shapefile to QGIS'
-                    # layer = iface.addVectorLayer(newFileBuffer, category + ' - ' + self.SearchName, "ogr")
                     layer = iface.addVectorLayer(newFileBuffer, searchCategory + ' Buffer (' + str(searchCategoryBuffer) + 'm)', "ogr")
 
+                    # Style the layer.
                     if not layer:
                         self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileBuffer + ')!', level=Qgis.Warning)
-                        # QMessageBox.information(None, "Error!", str('Failed to load layer into interface (' + newFileBuffer + ')!'))
                     else:
-                        # Style the layer.
                         self.styleShapefileBuffer(layer, searchCategory, fileNameShpBufferRaw)
 
                 # Zoom the map to the largest buffer.
@@ -1269,6 +1369,9 @@ class Aderyn:
                     self.createXlsx()
 
                 iface.messageBar().clearWidgets()
+
+            else:
+                self.run()
 
             # pass
 
