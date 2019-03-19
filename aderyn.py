@@ -140,6 +140,7 @@ class Aderyn:
         self.SearchWKT = NULL
         self.SearchWKTCentre = NULL
         self.SearchGeometry = NULL # QgsGeometry instance.
+        self.SearchGeometryType = NULL # 'Point','MultiPoint','Polyline','MultiPolyline','Polygon','MultiPolygon'
 
         # Store any gridsquare.
         self.gridSquareCentre = NULL  # QgsPointXY
@@ -297,6 +298,45 @@ class Aderyn:
         # Set output folder button.
         self.dlg.tb_output_folder.clicked.connect(self.outputFolder)
 
+    def clearVariables(self):
+        """Get all the variables from the GUI and load them into the class."""
+        self.SearchLocation = NULL
+        self.SearchWKT = NULL
+        self.SearchWKTCentre = NULL
+        self.SearchGeometry = NULL # QgsGeometry instance.
+
+        # Store any gridsquare.
+        self.gridSquareCentre = NULL  # QgsPointXY
+        self.gridSquareRectangle = NULL  # QgsRectangle
+        self.gridSquareRubberBand = NULL  # QgsRubberBand
+        self.gridSquareMaxBuffer = 0  # QgsRubberBand - store the largest buffer.
+        self.gridSquareMaxBufferBoundingBox = NULL
+
+        # Vector.
+        self.SearchVectorName = NULL
+        self.SearchVectorLayer = NULL
+        self.SearchVectorLayerFeatureCount = NULL
+        self.SearchVectorLayerFeatureCountSelected = NULL # selectedFeatureCount()
+        self.SearchVectorFeature = NULL
+
+        self.SearchName = NULL
+        self.SearchOutputFolder = NULL
+        self.SearchCategories = []
+        self.SearchCSVs = []
+        self.Cat1Select = NULL
+        self.Cat1Buffer = NULL
+        self.Cat2Select = NULL
+        self.Cat2Buffer = NULL
+        self.Cat3Select = NULL
+        self.Cat3Buffer = NULL
+        self.Cat4Select = NULL
+        self.Cat4Buffer = NULL
+        self.BatsSelect = NULL
+        self.BatsBuffer = NULL
+        self.RnbSelect = NULL
+        self.RnbBuffer = NULL
+        self.CsvSelect = NULL
+
     def setVariables(self):
         """Get all the variables from the GUI and load them into the class."""
         self.SearchLocation = self.dlg.le_location.text()
@@ -368,6 +408,7 @@ class Aderyn:
         QgsMessageLog.logMessage('Layer feature count: ' + str(self.SearchVectorLayerFeatureCount) + ', selected feature count: ' + str(self.SearchVectorLayerFeatureCountSelected) + '.', 'Aderyn')
 
         # Get the feature (self.SearchVectorFeature)
+        features = []
         if self.SearchVectorLayerFeatureCount == 1:
             QgsMessageLog.logMessage('Using single feature from vector layer.', 'Aderyn')
             features = layer.getFeatures()
@@ -430,9 +471,10 @@ class Aderyn:
 
         # What did we get?
         self.SearchGeometry = geom
+        self.SearchGeometryType = type
         self.SearchWKT = wkt
         self.SearchWKTCentre = wkt_centre
-        QgsMessageLog.logMessage('Geom type: ' + type + ', wkt: ' + wkt + ', wkt centre: ' + wkt_centre + ', length: ' + str(feature_length) + ', area: ' + str(feature_area) + '', 'Aderyn')
+        QgsMessageLog.logMessage('Geom type: ' + str(type) + ', wkt: ' + str(wkt) + ', wkt centre: ' + str(wkt_centre) + ', length: ' + str(feature_length) + ', area: ' + str(feature_area) + '', 'Aderyn')
 
     def validateVariables(self):
         """ Validate that the categories - if a cat is selected then there should be a buffer. """
@@ -568,6 +610,7 @@ class Aderyn:
                 geometry = QgsGeometry()
                 geometry = geometry.fromRect(rect)
                 self.SearchGeometry = geometry
+                self.SearchGeometryType = 'Point'
 
                 # Build the centre WKT. self.gridSquareCentre = centre ~ centre = QgsPointXY(res[0], res[1])
                 wkt = 'POINT(' \
@@ -699,10 +742,12 @@ class Aderyn:
     def createShapefileSearchLocation(self):
         """ Create (and add) shapefile for the search area (grid ref). """
 
-        # Get the rectangle. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
-        rect = self.gridSquareRectangle
-        geometry = QgsGeometry()
-        geometry = geometry.fromRect(rect)
+        # Get the search geometry. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+        # rect = self.gridSquareRectangle
+        # geometry = QgsGeometry()
+        # geometry = geometry.fromRect(rect)
+        geometry = self.SearchGeometry # Just get the geometry object (QgsGeometry()) stored by the locate gridref or getVectorLayers function.
+
 
         # Only do this for canvas in OSGB or if there's a user-defined grid size. Firstly update the canvas CRS.
         self.canvasCrs = iface.mapCanvas().mapSettings().destinationCrs().authid()
@@ -710,13 +755,28 @@ class Aderyn:
 
             # Create a writer.
             writerCrs = QgsCoordinateReferenceSystem(27700)
-            shapefileType = QgsWkbTypes.Polygon  # Point - could be polygon.
+
+            # Set geom type - could be 'Point','MultiPoint','Polyline','MultiPolyline','Polygon','MultiPolygon'
+            if self.SearchGeometryType == 'Point':
+                shapefileType = QgsWkbTypes.Point
+            elif self.SearchGeometryType == 'MultiPoint':
+                shapefileType = QgsWkbTypes.Point
+            elif self.SearchGeometryType == 'Polyline':
+                shapefileType = QgsWkbTypes.LineString
+            elif self.SearchGeometryType == 'MultiPolyline':
+                shapefileType = QgsWkbTypes.LineString
+            elif self.SearchGeometryType == 'Polygon':
+                shapefileType = QgsWkbTypes.Polygon
+            elif self.SearchGeometryType == 'MultiPolygon':
+                shapefileType = QgsWkbTypes.Polygon
+
             fileName = 'search_location'
             outputFile = os.path.join(self.SearchOutputFolder, fileName)
             QgsMessageLog.logMessage('Search location output file: ' + outputFile + '.', 'Aderyn')
             fields = QgsFields()
             fields.append(QgsField("id", QVariant.Int))
-            fields.append(QgsField("grid_ref", QVariant.String))
+            fields.append(QgsField("type", QVariant.String))
+            fields.append(QgsField("string", QVariant.String)) # Might be grid ref or blank.
             fields.append(QgsField("location", QVariant.String))
             writer = QgsVectorFileWriter(outputFile, "CP1250", fields, shapefileType, writerCrs, "ESRI Shapefile")
 
@@ -734,6 +794,7 @@ class Aderyn:
             # Add in one line.
             fet.setAttributes([
                 1,
+                self.SearchGeometryType,
                 self.SearchName,
                 self.SearchLocation,
             ])
@@ -754,7 +815,22 @@ class Aderyn:
     def styleShapefileSearchLocation(self, layer, fileName):
         """ Style the layer - and save the resulting QML file. """
         renderer = layer.renderer()
-        symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+
+        # Set geom type - could be 'Point','MultiPoint','Polyline','MultiPolyline','Polygon','MultiPolygon'
+        if self.SearchGeometryType == 'Point':
+            symbol = QgsFillSymbol.createSimple({'name': 'circle', 'color': '255, 0, 255', 'size': '3' })
+        elif self.SearchGeometryType == 'MultiPoint':
+            symbol = QgsFillSymbol.createSimple({'name': 'circle', 'color': '255, 0, 255', 'size': '3' })
+        elif self.SearchGeometryType == 'Polyline':
+            symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+        elif self.SearchGeometryType == 'MultiPolyline':
+            symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+        elif self.SearchGeometryType == 'Polygon':
+            symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+        elif self.SearchGeometryType == 'MultiPolygon':
+            symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+        # symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+
         renderer.setSymbol(symbol)
 
         # Update the symbolgy on the layer tree (refresh)
@@ -765,14 +841,11 @@ class Aderyn:
         layer.saveNamedStyle(outputFile)
 
     def createShapefileBuffer(self, category, buffer):
-        """ Create (and add) shapefile for a given point and buffer. """
+        """ Create shapefile for search geometry and buffer. """
         #Convert buffer to int.
         buffer = int(buffer)
 
-        # Buffer the rectangle. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
-        # rect = self.gridSquareRectangle
-        # geometry = QgsGeometry()
-        # geometry = geometry.fromRect(rect)
+        # Buffer the search geometry. https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
         geometry = self.SearchGeometry # Just get the geometry object (QgsGeometry()) stored by the locate gridref or getVectorLayers function.
         buffered = geometry.buffer(buffer, 10)
 
@@ -1274,6 +1347,7 @@ class Aderyn:
         # See if OK was pressed
         if result:
             # Let's go!
+            self.clearVariables() # Reset everything.
             self.setVariables()
             self.clearGridref() # Clear any grid refs elastic bands.
             self.displayGridref() # If there is a grid ref, display it.
@@ -1292,23 +1366,21 @@ class Aderyn:
                 couter = 0
 
                 #Create shapefile of search location.
-                # self.locateGridref()  # This will validate the location (again) - but NOT display it.
                 QgsMessageLog.logMessage('Saving search location shapefile.', 'Aderyn')
-                # fileNameShpSearchLocationRaw = self.createShapefileSearchLocation()
+                fileNameShpSearchLocationRaw = self.createShapefileSearchLocation()
 
                 # Get the file name - for adding it to the interface.
-                # fileNameShpSearchLocation = fileNameShpSearchLocationRaw + '.shp';
-                # newFileSearchLocation = os.path.join(self.SearchOutputFolder, fileNameShpSearchLocation)
+                fileNameShpSearchLocation = fileNameShpSearchLocationRaw + '.shp';
+                newFileSearchLocation = os.path.join(self.SearchOutputFolder, fileNameShpSearchLocation)
 
                 # Add the shapefile to QGIS'
-                # layer = iface.addVectorLayer(newFileBuffer, category + ' - ' + self.SearchName, "ogr")
-                # layer = iface.addVectorLayer(newFileSearchLocation, 'Search Location', "ogr")
+                layer = iface.addVectorLayer(newFileSearchLocation, 'Search Location', "ogr")
 
                 # Style the layer.
-                # if not layer:
-                #     self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileSearchLocation + ')!', level=Qgis.Warning)
-                # else:
-                #     self.styleShapefileSearchLocation(layer, fileNameShpSearchLocationRaw)
+                if not layer:
+                    self.iface.messageBar().pushMessage("Warning", 'Failed to load layer into interface (' + newFileSearchLocation + ')!', level=Qgis.Warning)
+                else:
+                    self.styleShapefileSearchLocation(layer, fileNameShpSearchLocationRaw)
 
                 #Add all the buffers.
                 for category in self.SearchCategories:
