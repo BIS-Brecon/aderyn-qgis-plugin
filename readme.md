@@ -15,7 +15,7 @@ The resuting data is then written to shape files (and CSV if requested) and disp
 1.  Access to the merged database is restricted due to the sensitive nature of many of the records. If you are a partner organisation or have an SLA with LERC Wales, contact us to obtain a username and password for the database.
 2.  Enter the database settings (username, password and IP address) in the setting window (Database > Aderyn Data Search > Settings). Once saved, use the 'Test Database Connection' button in the main window to ensure a record is returned from the database.
 3.  Ensure the map view is in OSGB36 (EPSG:27700) projection.
-4.  Enter a grid reference in the location box and click 'Locate' to pan/zoom the map.
+4.  Specify the search location. You can either enter a UK OS grid reference in the location box and click 'Locate' to pan/zoom the map, or you can select a visible vector layer (or load one). If you select a vector layer, the layer must have only a single feature or have a single feature selected. 
 5.  Enter a search name (this will be used to name the exported files).
 6.  Select the output folder where the shape files will be saved.
 7.  Select the required categories. If a category is selected, a buffer distance must be specified.
