@@ -10,7 +10,7 @@
 name=Aderyn Data Search
 qgisMinimumVersion=3.0
 description=This plugin searches the LERC Wales Aderyn wildlife database.
-version=0.1
+version=0.2
 author=Biodiversity Information Service
 email=enquiry@bis.org.uk
 

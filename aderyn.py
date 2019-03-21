@@ -47,7 +47,7 @@ from aderyn_query import AderynQuery
 from aderyn_spreadsheet import AderynSpreadsheet
 
 #Extra libraries.
-import XlsxWriter
+from XlsxWriter import xlsxwriter
 
 class Aderyn:
     """QGIS Plugin Implementation."""
@@ -1132,7 +1132,7 @@ class Aderyn:
         #Create the XLSX file.
         searchNameCleaned = self.SearchName.replace(" ", "_").lower()
         xlsxFile = os.path.join(self.SearchOutputFolder, searchNameCleaned) + '.xlsx'
-        workbook = XlsxWriter.Workbook(xlsxFile)
+        workbook = xlsxwriter.Workbook(xlsxFile)
         QgsMessageLog.logMessage('Created XLSX file ' + xlsxFile, 'Aderyn')
 
         #Add formats.
