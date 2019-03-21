@@ -47,32 +47,7 @@ from aderyn_query import AderynQuery
 from aderyn_spreadsheet import AderynSpreadsheet
 
 #Extra libraries.
-import xlsxwriter
-
-# # Install extra libraries.
-# plugin_dir = os.path.dirname(__file__)
-# #PIP
-# try:
-#     import pip
-# except:
-#     exec(open(os.path.join(plugin_dir, 'get_pip.py')).read())
-#     import pip
-#
-# #Import pip.main - allow for version 3 & 4.
-# try:
-#     from pip import main as pipmain
-# except:
-#     from pip._internal import main as pipmain
-#
-# #Upgrade PIP.
-# pipmain(['install', '--upgrade', 'pip'])
-#
-# #XlsxWriter
-# try:
-#     import XlsxWriter
-# except:
-#     pipmain(['install', '-q', 'XlsxWriter'])
-#     import XlsxWriter
+import XlsxWriter
 
 class Aderyn:
     """QGIS Plugin Implementation."""
@@ -782,7 +757,8 @@ class Aderyn:
 
             # Errors?
             if writer.hasError() != QgsVectorFileWriter.NoError:
-                print("Error when creating shapefile: ", writer.errorMessage())
+                # print("Error when creating shapefile: ", writer.errorMessage())
+                QgsMessageLog.logMessage('Error when creating shapefile: ' + writer.errorMessage() + '.', 'Aderyn')
 
             # Write feature.
             fet = QgsFeature()
@@ -818,19 +794,18 @@ class Aderyn:
 
         # Set geom type - could be 'Point','MultiPoint','Polyline','MultiPolyline','Polygon','MultiPolygon'
         if self.SearchGeometryType == 'Point':
-            symbol = QgsFillSymbol.createSimple({'name': 'circle', 'color': '255, 0, 255', 'size': '3' })
+            symbol = QgsMarkerSymbol.createSimple({'name': 'triangle', 'color': '255, 0, 255', 'size': '3', })
         elif self.SearchGeometryType == 'MultiPoint':
-            symbol = QgsFillSymbol.createSimple({'name': 'circle', 'color': '255, 0, 255', 'size': '3' })
+            symbol = QgsMarkerSymbol.createSimple({'name': 'triangle', 'color': '255, 0, 255', 'size': '3', })
         elif self.SearchGeometryType == 'Polyline':
-            symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            symbol = QgsLineSymbol.createSimple({'color': '255, 0, 255', 'width': '0.66'})
         elif self.SearchGeometryType == 'MultiPolyline':
-            symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
+            symbol = QgsLineSymbol.createSimple({'color': '255, 0, 255', 'width': '0.66'})
         elif self.SearchGeometryType == 'Polygon':
             symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
         elif self.SearchGeometryType == 'MultiPolygon':
             symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
         # symbol = QgsFillSymbol.createSimple({'outline_color': '255, 0, 255', 'outline_width': '0.66', 'outline_style': 'solid', 'style':'no' })
-
         renderer.setSymbol(symbol)
 
         # Update the symbolgy on the layer tree (refresh)
@@ -947,6 +922,7 @@ class Aderyn:
     def saveSettings(self):
         """Get the settings from the form fields and update the internal variables."""
         self.dbhost = self.dlg_settings.le_dbhost.text()
+        self.dbname = "lrc_wales_data"
         self.dbuser = self.dlg_settings.le_dbuser.text()
         self.dbpassword = self.dlg_settings.le_dbpassword.text()
         # Save the supplied settings.
@@ -1085,22 +1061,17 @@ class Aderyn:
         renderer = layer.renderer()
         if category == 'CAT1':
             symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'red', 'size': '2', })
-            renderer.setSymbol(symbol)
         elif category == 'CAT2':
             symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'orange', 'size': '3', })
-            renderer.setSymbol(symbol)
         elif category == 'CAT3':
             symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'yellow', 'size': '4', })
-            renderer.setSymbol(symbol)
         elif category == 'CAT4':
             symbol = QgsMarkerSymbol.createSimple({'name': 'star', 'color': 'black', 'size': '2', })
-            renderer.setSymbol(symbol)
         elif category == 'BATS':
             symbol = QgsMarkerSymbol.createSimple({'name': 'triangle', 'color': 'black', 'size': '2', })
-            renderer.setSymbol(symbol)
         elif category == 'RNB':
             symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'blue', 'size': '2', })
-            renderer.setSymbol(symbol)
+        renderer.setSymbol(symbol)
 
         # Update the symbolgy on the layer tree (refresh)
         iface.layerTreeView().refreshLayerSymbology(iface.activeLayer().id())
@@ -1161,7 +1132,7 @@ class Aderyn:
         #Create the XLSX file.
         searchNameCleaned = self.SearchName.replace(" ", "_").lower()
         xlsxFile = os.path.join(self.SearchOutputFolder, searchNameCleaned) + '.xlsx'
-        workbook = xlsxwriter.Workbook(xlsxFile)
+        workbook = XlsxWriter.Workbook(xlsxFile)
         QgsMessageLog.logMessage('Created XLSX file ' + xlsxFile, 'Aderyn')
 
         #Add formats.
