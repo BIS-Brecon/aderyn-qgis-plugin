@@ -1,7 +1,7 @@
-# This file contains metadata for your plugin. Since 
-# version 2.0 of QGIS this is the proper way to supply 
-# information about a plugin. The old method of 
-# embedding metadata in __init__.py will 
+# This file contains metadata for your plugin. Since
+# version 2.0 of QGIS this is the proper way to supply
+# information about a plugin. The old method of
+# embedding metadata in __init__.py will
 # is no longer supported since version 2.0.
 
 # This file should be included when you package your plugin.# Mandatory items:
@@ -10,14 +10,14 @@
 name=Aderyn Data Search
 qgisMinimumVersion=3.0
 description=This plugin searches the LERC Wales Aderyn wildlife database.
-version=0.2
+version=1.0
 author=Biodiversity Information Service
 email=enquiry@bis.org.uk
 
 about=This plugin searches the LERC Wales Aderyn wildlife database. Different search geometries can be used and different buffers specified for each species category. To use this plugin, you must have access to the LERC Wales merged database. Your login details for the database will be required to use this plugin.
 
-tracker=https://github.com/stevegoddard/aderyn-qgis-plugin/issues
-repository=https://github.com/stevegoddard/aderyn-qgis-plugin
+tracker=https://github.com/BiodiversityInformationService/aderyn-qgis-plugin/issues
+repository=https://github.com/BiodiversityInformationService/aderyn-qgis-plugin
 # End of mandatory metadata
 
 # Recommended items:
@@ -32,7 +32,7 @@ homepage=http://aderyn.lercwales.org
 category=Database
 icon=icon.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
